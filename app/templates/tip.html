@@ -1,0 +1,14 @@
+<!doctype html>
+<title>Tip User</title>
+<h2>Tip a User</h2>
+<form method="POST">
+  Username to tip: <input name="to_user" required><br>
+  Amount: <input name="amount" required><br>
+  <button type="submit">Send Tip</button>
+</form>
+<a href="{{ url_for('menu') }}">Back to menu</a>
+{% with messages = get_flashed_messages() %}
+  {% if messages %}
+    <ul>{% for msg in messages %}<li>{{ msg }}</li>{% endfor %}</ul>
+  {% endif %}
+{% endwith %}

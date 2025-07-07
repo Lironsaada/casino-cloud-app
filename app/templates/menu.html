@@ -1,0 +1,18 @@
+<!doctype html>
+<title>Casino Menu</title>
+<h2>Welcome, {{username}}!</h2>
+<p>Balance: {{balance}} coins</p>
+<ul>
+  <li><a href="{{ url_for('blackjack') }}">Play Blackjack</a></li>
+  <li><a href="{{ url_for('roulette') }}">Play Roulette</a></li>
+  <li><a href="{{ url_for('slots') }}">Play Slots</a></li>
+  <li><a href="{{ url_for('tip') }}">Tip a User</a></li>
+  <li><a href="{{ url_for('check_balance') }}">Check Balance</a></li>
+  <li><a href="{{ url_for('admin') }}">Admin Options</a></li>
+  <li><a href="{{ url_for('logout') }}">Logout</a></li>
+</ul>
+{% with messages = get_flashed_messages() %}
+  {% if messages %}
+    <ul>{% for msg in messages %}<li>{{ msg }}</li>{% endfor %}</ul>
+  {% endif %}
+{% endwith %}

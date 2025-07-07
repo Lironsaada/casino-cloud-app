@@ -1,0 +1,14 @@
+<!doctype html>
+<title>Slots</title>
+<h2>Slots</h2>
+<p>Balance: {{ balance }} coins</p>
+<form method="POST">
+  Bet amount: <input name="bet" required><br>
+  <button type="submit">Spin</button>
+</form>
+<a href="{{ url_for('menu') }}">Back to menu</a>
+{% with messages = get_flashed_messages() %}
+  {% if messages %}
+    <ul>{% for msg in messages %}<li>{{ msg }}</li>{% endfor %}</ul>
+  {% endif %}
+{% endwith %}
