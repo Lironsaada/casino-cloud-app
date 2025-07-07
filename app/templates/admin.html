@@ -1,0 +1,25 @@
+<!doctype html>
+<title>Admin Panel</title>
+<h2>Admin Panel</h2>
+<h3>User Balances</h3>
+<table border="1">
+  <tr><th>User</th><th>Balance</th></tr>
+  {% for u,b in users.items() %}
+  <tr><td>{{ u }}</td><td>{{ b.balance }}</td></tr>
+  {% endfor %}
+</table>
+
+<h3>Change User Balance</h3>
+<form method="POST">
+  <input type="hidden" name="action" value="change_balance">
+  Username: <input name="target_user" required>
+  New Balance: <input name="new_balance" required>
+  <button type="submit">Change</button>
+</form>
+
+<a href="{{ url_for('menu') }}">Back to menu</a>
+{% with messages = get_flashed_messages() %}
+  {% if messages %}
+    <ul>{% for msg in messages %}<li>{{ msg }}</li>{% endfor %}</ul>
+  {% endif %}
+{% endwith %}

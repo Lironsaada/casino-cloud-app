@@ -1,0 +1,9 @@
+<!doctype html>
+<title>Blackjack Result</title>
+<h2>Blackjack Result</h2>
+<p>Your Hand: {{ player_hand }} (Value: {{ player_val }})</p>
+<p>Dealer's Hand: {{ dealer_hand }} (Value: {{ dealer_val }})</p>
+<p>{{ result }}</p>
+<p>Balance: {{ balance }}</p>
+<a href="{{ url_for('blackjack') }}">Play Again</a> |
+<a href="{{ url_for('menu') }}">Back to menu</a>

@@ -1,0 +1,20 @@
+<!doctype html>
+<title>Roulette</title>
+<h2>Roulette</h2>
+<p>Balance: {{ balance }} coins</p>
+<form method="POST">
+  Bet amount: <input name="bet" required><br>
+  Choose color:
+  <select name="color" required>
+    <option value="red">Red</option>
+    <option value="black">Black</option>
+    <option value="green">Green</option>
+  </select><br>
+  <button type="submit">Spin</button>
+</form>
+<a href="{{ url_for('menu') }}">Back to menu</a>
+{% with messages = get_flashed_messages() %}
+  {% if messages %}
+    <ul>{% for msg in messages %}<li>{{ msg }}</li>{% endfor %}</ul>
+  {% endif %}
+{% endwith %}
