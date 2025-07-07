@@ -208,24 +208,30 @@ def blackjack():
         return render_template("blackjack_bet.html", balance=user["balance"])
 
     if bj["state"] == "playing":
-        action = request.form.get("action")
         deck = bj["deck"]
         player_hand = bj["player_hand"]
         dealer_hand = bj["dealer_hand"]
 
-        if action == "hit":
-            player_hand.append(deck.pop())
-            if hand_value(player_hand) > 21:
-                bj["state"] = "finished"
-        elif action == "stand":
-            bj["state"] = "dealer_turn"
-        else:
-            # initial render or invalid action, show current hands
-            pass
+        if request.method == "POST":
+            action = request.form.get("action")
+            if action == "hit":
+                player_hand.append(deck.pop())
+                if hand_value(player_hand) > 21:
+                    bj["state"] = "finished"
+            elif action == "stand":
+                bj["state"] = "dealer_turn"
 
-        bj["player_hand"] = player_hand
-        session["blackjack"] = bj
-        return redirect(url_for("blackjack"))
+            bj["player_hand"] = player_hand
+            bj["deck"] = deck
+            session["blackjack"] = bj
+            return redirect(url_for("blackjack"))
+        else:
+            # GET request: render game state page
+            return render_template("blackjack_play.html",
+                                   player_hand=player_hand,
+                                   dealer_hand=dealer_hand,
+                                   player_value=hand_value(player_hand),
+                                   balance=bj["balance"])
 
     if bj["state"] == "dealer_turn":
         deck = bj["deck"]

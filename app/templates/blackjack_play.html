@@ -1,0 +1,69 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8" />
+    <title>Blackjack - Playing</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 600px;
+            margin: 2rem auto;
+            padding: 1rem;
+            background-color: #f9f9f9;
+            text-align: center;
+        }
+        .hand {
+            margin: 1rem 0;
+            font-size: 2rem;
+        }
+        .cards {
+            font-size: 3rem;
+            margin: 0.5rem 0;
+        }
+        .buttons {
+            margin-top: 1.5rem;
+        }
+        button {
+            font-size: 1.2rem;
+            padding: 0.5rem 1rem;
+            margin: 0 0.5rem;
+            cursor: pointer;
+        }
+        .balance {
+            margin-bottom: 1rem;
+            font-weight: bold;
+        }
+    </style>
+</head>
+<body>
+    <h1>Blackjack</h1>
+    <div class="balance">Balance: {{ balance }} coins</div>
+
+    <div class="hand">
+        <div>Dealer's Hand:</div>
+        <div class="cards">
+            {{ dealer_hand[0] }}
+            {% if bj_state == 'playing' %}
+                🂠 <!-- Hidden card symbol -->
+            {% else %}
+                {{ dealer_hand[1] }}
+            {% endif %}
+        </div>
+    </div>
+
+    <div class="hand">
+        <div>Your Hand: ({{ player_value }})</div>
+        <div class="cards">
+            {% for card in player_hand %}
+                {{ card }}
+            {% endfor %}
+        </div>
+    </div>
+
+    <form method="post" class="buttons">
+        <button type="submit" name="action" value="hit">Hit</button>
+        <button type="submit" name="action" value="stand">Stand</button>
+    </form>
+
+</body>
+</html>
