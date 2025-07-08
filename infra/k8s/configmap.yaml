@@ -1,0 +1,12 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: casino-users
+data:
+  users.json: |
+    {
+      "Liron": {
+        "password": "1136",
+        "balance": 1000
+      }
+    }

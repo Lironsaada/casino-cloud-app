@@ -1,0 +1,25 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: casino-app
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: casino
+  template:
+    metadata:
+      labels:
+        app: casino
+    spec:
+      containers:
+        - name: casino
+          image: lironsaada/casino-app:latest
+          ports:
+            - containerPort: 5000
+          volumeMounts:
+            - name: users-volume
+              mountPath: /data
+      volumes:
+        - name: users-volume
+          emptyDir: {}
