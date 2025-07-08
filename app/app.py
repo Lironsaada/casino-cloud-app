@@ -7,7 +7,7 @@ app = Flask(__name__)
 app.secret_key = "your_secret_key_here"  # Change this to a secure secret key
 
 USERS_FILE = "/data/users.json"
-ADMIN_PASS = "Liron1136"
+ADMIN_PASS = "12345"
 
 # Load or create users data
 if os.path.exists(USERS_FILE):
