@@ -6,7 +6,7 @@ import os
 app = Flask(__name__)
 app.secret_key = "your_secret_key_here"  # Change this to a secure secret key
 
-USERS_FILE = "users.json"
+USERS_FILE = "/data/users.json"
 ADMIN_PASS = "Liron1136"
 
 # Load or create users data
@@ -390,4 +390,5 @@ def slots():
     return render_template("slots.html", balance=user["balance"])
 
 if __name__ == "__main__":
-    app.run(debug=True)
+    app.run(host="0.0.0.0", debug=True)
+
