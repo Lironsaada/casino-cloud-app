@@ -34,7 +34,7 @@ Copy
 ## 🧪 Running Locally (Dev)
 
 ```bash
-git clone https://github.com/<your-user>/casino-cloud-app.git
+git clone https://github.com/lironsaada/casino-cloud-app.git
 cd casino-cloud-app
 
 python3 -m venv venv
