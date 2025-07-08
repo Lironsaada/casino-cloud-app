@@ -18,25 +18,29 @@ A fun, Flask-based casino application running in a Kubernetes environment. Inclu
 🗂 Directory Structure
 
 casino-cloud-app/
-├── app/                     # Flask app and HTML templates
-│   ├── app.py              # Main Flask application
-│   ├── blackjack.py        # Blackjack game logic (optional split file)
-│   ├── roulette.py         # Roulette game logic (if separated)
-│   ├── slots.py            # Slot machine logic (if separated)
-│   ├── templates/          # Jinja2 HTML templates
-│   └── users.json          # Persistent user data (via PVC)
+├── app/                     
+│   ├── app.py              
+│   ├── blackjack.py        
+│   ├── roulette.py         
+│   ├── slots.py            
+│   ├── templates/          
+│   └── users.json       
 │
 ├── infra/
-│   ├── k8s/                # Kubernetes manifests
-│   │   ├── deployment.yaml
-│   │   ├── service.yaml
-│   │   ├── configmap.yaml
-│   │   └── pvc.yaml
-│   └── main.tf             # Terraform (Azure Infra - WIP)
+│   ├──   k8s               
+│   │     ├── deployment.yaml
+│   │     ├── service.yaml
+│   │     ├── configmap.yaml
+│   │     └── pvc.yaml
+│   │   
+│   │└── main.tf
+│   │ └── outputs.tf
+│   │ └── provider.tf
+│   │ └── variables.tf
 │
-├── requirements.txt        # Python dependencies
-├── Dockerfile              # Docker image definition
-└── README.md               # Project documentation
+├── requirements.txt      
+├── Dockerfile           
+└── README.md             
 
 ---
 
