@@ -1,11 +1,15 @@
 variable "resource_group_name" {
-  description = "Name of the Azure Resource Group"
-  type        = string
-  default     = "casino-rg"
+  default = "casino-rg"
 }
 
 variable "location" {
-  description = "Azure location"
-  type        = string
-  default     = "westeurope"
+  default = "East US"
+}
+
+variable "aks_cluster_name" {
+  default = "casino-aks"
+}
+
+variable "acr_name" {
+  default = "casinoregistry123"  # must be globally unique
 }
