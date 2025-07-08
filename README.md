@@ -1,89 +1,88 @@
-# 🎰 Casino Cloud App
+# 🎰 Casino Cloud App 🎰
 
-A modern, cloud-native Casino Web Application featuring **Blackjack**, **Roulette**, and **Slots**, rebuilt in Python and deployed using cutting-edge DevOps tools. This project showcases full DevOps lifecycle implementation, from infrastructure provisioning and CI/CD automation to container orchestration and real-time monitoring on Microsoft Azure.
+A fun, Flask-based casino application running in a Kubernetes environment. Includes Blackjack, Roulette, and Slot Machine games, with persistent user balances, tipping system, and an admin panel.
 
 ---
 
 ## 🚀 Features
 
-- 🃏 **Blackjack** – Supports split hands, double down, and emoji-based cards  
-- 🎡 **Roulette** – Includes red/black/green wheel with spin animation  
-- 🎰 **Slots** – Emoji reels with tiered payouts and randomized outcomes  
-- 👤 **User Management** – Login system with persistent balance tracking  
-- ☁️ **Cloud-Native Deployment** – Runs on Azure Kubernetes Service (AKS)  
-- 🔄 **CI/CD Pipeline** – Automated build, test, and deploy workflow  
-- 📊 **Monitoring & Observability** – Prometheus & Grafana dashboards  
+- 🎲 Games: Blackjack, Roulette, Slots
+- 👤 User accounts with password & balance
+- 💰 Tipping between users
+- 🛠 Admin panel for changing balances
+- 🧠 Memory persistence via PVC and `users.json`
+- �� Dockerized & Kubernetes-ready
 
 ---
 
-## 🛠 Tech Stack
+## 🗂 Directory Structure
 
-| Category             | Tool/Service                      |
-|----------------------|-----------------------------------|
-| Programming Language | Python (Flask)                    |
-| Containerization     | Docker                            |
-| Orchestration        | Kubernetes (AKS)                  |
-| Infrastructure       | Terraform                         |
-| CI/CD                | GitHub Actions / GitLab CI        |
-| Monitoring           | Prometheus, Grafana               |
-| Cloud Provider       | Microsoft Azure                   |
-
----
-
-## 📁 Project Structure
-
-```yaml
 casino-cloud-app/
-├── app/           → Python Flask app (web & logic)
-├── docker/        → Dockerfiles and Docker config
-├── infra/         → Terraform scripts & K8s manifests
-├── cicd/          → CI/CD pipeline definitions
-├── monitoring/    → Prometheus & Grafana setup
-├── legacy/        → Original Bash version of the casino
-└── README.md
-```
+├── app/ # Flask app and templates
+├── infra/
+│ ├── k8s/ # Kubernetes manifests
+│ └── main.tf # Terraform (Azure Infra - WIP)
+├── requirements.txt # Python dependencies
+├── Dockerfile # App image
+└── README.md # This file
+
+yaml
+Copy
 
 ---
 
-## 🧱 Infrastructure (Planned)
-
-- Azure Resource Group & Networking  
-- Azure Kubernetes Service (AKS)  
-- Azure Container Registry (ACR)  
-- IAM & Secrets Management  
-- Provisioned using **Terraform**  
-
----
-
-## 🔄 CI/CD Workflow (Planned)
-
-1. Code push triggers:
-   - Linting & testing  
-   - Docker build & push to ACR  
-   - Kubernetes deployment  
-2. Integrated via:
-   - GitHub Actions or GitLab CI  
-   - Kubernetes Rollouts  
-   - Helm (optional)  
-
----
-
-## 📈 Monitoring (Planned)
-
-- Prometheus scrapes metrics from Flask app & K8s pods  
-- Grafana dashboards include:
-  - Pod CPU/memory usage  
-  - Active users  
-  - App request statistics  
-  - Error rates  
-
----
-
-## 📦 Quick Start (Local)
+## 🧪 Running Locally (Dev)
 
 ```bash
-# Build and run locally
-cd app/
-docker build -t casino-app .
-docker run -p 5000:5000 casino-app
-```
+git clone https://github.com/<your-user>/casino-cloud-app.git
+cd casino-cloud-app
+
+python3 -m venv venv
+source venv/bin/activate
+pip install -r requirements.txt
+cd app
+python app.py
+App will run on http://localhost:5000.
+
+🐳 Docker Build & Run
+bash
+Copy
+docker build -t lironsaada/casino-app:latest .
+docker run -p 5000:5000 lironsaada/casino-app:latest
+☸️ Kubernetes Deployment
+Make sure your cluster is running.
+
+Apply the Kubernetes manifests:
+
+bash
+Copy
+kubectl apply -f infra/k8s/
+Port-forward to access the app:
+
+bash
+Copy
+kubectl port-forward svc/casino-service 8080:80
+Then open http://localhost:8080
+
+🔒 Admin Password
+Default admin password: 12345
+
+⚠️ Notes
+The app uses /data/users.json for persistent balances.
+
+Admin and tipping are accessible after login.
+
+Monitoring integration (Prometheus & Grafana) attempted but currently disabled.
+
+📦 Image Repository
+Docker Hub - lironsaada/casino-app
+
+✨ Todo
+ Add Azure infra via Terraform
+
+ Optional: Finish Prometheus/Grafana metrics
+
+ Improve game UI with Bootstrap
+
+🧑‍💻 Built By
+Liron Saada
