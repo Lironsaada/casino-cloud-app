@@ -6,7 +6,10 @@ import os
 app = Flask(__name__)
 app.secret_key = "your_secret_key_here"  # Change this to a secure secret key
 
-USERS_FILE = "/data/users.json"
+import os
+
+USERS_FILE = os.path.join(os.path.dirname(__file__), "../users.json")
+
 ADMIN_PASS = "12345"
 
 # Load or create users data
