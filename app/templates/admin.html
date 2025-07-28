@@ -1,25 +1,606 @@
-<!doctype html>
-<title>Admin Panel</title>
-<h2>Admin Panel</h2>
-<h3>User Balances</h3>
-<table border="1">
-  <tr><th>User</th><th>Balance</th></tr>
-  {% for u,b in users.items() %}
-  <tr><td>{{ u }}</td><td>{{ b.balance }}</td></tr>
-  {% endfor %}
-</table>
+{% extends "base.html" %}
 
-<h3>Change User Balance</h3>
-<form method="POST">
-  <input type="hidden" name="action" value="change_balance">
-  Username: <input name="target_user" required>
-  New Balance: <input name="new_balance" required>
-  <button type="submit">Change</button>
-</form>
+{% block title %}Admin Dashboard{% endblock %}
 
-<a href="{{ url_for('menu') }}">Back to menu</a>
-{% with messages = get_flashed_messages() %}
-  {% if messages %}
-    <ul>{% for msg in messages %}<li>{{ msg }}</li>{% endfor %}</ul>
-  {% endif %}
-{% endwith %}
+{% block content %}
+<div class="container-fluid admin-dashboard">
+    <!-- Header Section -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="admin-header">
+                <div class="admin-title-row">
+                    <div>
+                        <h1 class="admin-title">
+                            <i class="fas fa-user-shield text-primary-gold"></i>
+                            Admin Dashboard
+                        </h1>
+                        <p class="admin-subtitle">Manage users and monitor casino operations</p>
+                    </div>
+                    <div class="admin-actions">
+                        <a href="{{ url_for('admin_logout') }}" class="btn btn-secondary admin-logout-btn">
+                            <i class="fas fa-sign-out-alt me-2"></i>
+                            Exit Admin
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Statistics Cards -->
+    <div class="row mb-4">
+        <div class="col-xl-3 col-lg-6 col-md-6 mb-3">
+            <div class="stat-card">
+                <div class="stat-card-body">
+                    <div class="stat-icon">
+                        <i class="fas fa-users"></i>
+                    </div>
+                    <div class="stat-info">
+                        <h3>{{ users|length }}</h3>
+                        <p>Total Users</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-xl-3 col-lg-6 col-md-6 mb-3">
+            <div class="stat-card">
+                <div class="stat-card-body">
+                    <div class="stat-icon">
+                        <i class="fas fa-coins"></i>
+                    </div>
+                    <div class="stat-info">
+                        <h3>{{ users|sum(attribute='balance')|int }}</h3>
+                        <p>Total Coins</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-xl-3 col-lg-6 col-md-6 mb-3">
+            <div class="stat-card">
+                <div class="stat-card-body">
+                    <div class="stat-icon">
+                        <i class="fas fa-chart-line"></i>
+                    </div>
+                    <div class="stat-info">
+                        <h3>{{ (users|sum(attribute='balance') / users|length)|round|int if users else 0 }}</h3>
+                        <p>Avg Balance</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-xl-3 col-lg-6 col-md-6 mb-3">
+            <div class="stat-card">
+                <div class="stat-card-body">
+                    <div class="stat-icon">
+                        <i class="fas fa-crown"></i>
+                    </div>
+                    <div class="stat-info">
+                        <h3>{{ users|selectattr('is_admin')|list|length }}</h3>
+                        <p>Admins</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Quick Actions -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="admin-card">
+                <div class="admin-card-header">
+                    <h4><i class="fas fa-bolt"></i> Quick Actions</h4>
+                </div>
+                <div class="admin-card-body">
+                    <div class="row">
+                        <div class="col-lg-4 col-md-6 mb-3">
+                            <div class="quick-action-form">
+                                <h6>Add Coins to User</h6>
+                                <form method="POST" class="quick-form">
+                                    <div class="form-group mb-2">
+                                        <select name="username" class="form-select" required>
+                                            <option value="">Select User</option>
+                                            {% for user in users %}
+                                            <option value="{{ user.username }}">{{ user.username }}</option>
+                                            {% endfor %}
+                                        </select>
+                                    </div>
+                                    <div class="input-group mb-2">
+                                        <input type="number" name="amount" class="form-control" placeholder="Amount" min="1" required>
+                                        <button type="submit" name="action" value="add" class="btn btn-success">
+                                            <i class="fas fa-plus"></i> Add
+                                        </button>
+                                    </div>
+                                </form>
+                            </div>
+                        </div>
+                        <div class="col-lg-4 col-md-6 mb-3">
+                            <div class="quick-action-form">
+                                <h6>Remove Coins from User</h6>
+                                <form method="POST" class="quick-form">
+                                    <div class="form-group mb-2">
+                                        <select name="username" class="form-select" required>
+                                            <option value="">Select User</option>
+                                            {% for user in users %}
+                                            <option value="{{ user.username }}">{{ user.username }}</option>
+                                            {% endfor %}
+                                        </select>
+                                    </div>
+                                    <div class="input-group mb-2">
+                                        <input type="number" name="amount" class="form-control" placeholder="Amount" min="1" required>
+                                        <button type="submit" name="action" value="subtract" class="btn btn-danger">
+                                            <i class="fas fa-minus"></i> Remove
+                                        </button>
+                                    </div>
+                                </form>
+                            </div>
+                        </div>
+                        <div class="col-lg-4 col-md-12 mb-3">
+                            <div class="quick-action-form">
+                                <h6>Set Balance</h6>
+                                <form method="POST" class="quick-form">
+                                    <div class="form-group mb-2">
+                                        <select name="username" class="form-select" required>
+                                            <option value="">Select User</option>
+                                            {% for user in users %}
+                                            <option value="{{ user.username }}">{{ user.username }}</option>
+                                            {% endfor %}
+                                        </select>
+                                    </div>
+                                    <div class="input-group mb-2">
+                                        <input type="number" name="amount" class="form-control" placeholder="New Balance" min="0" required>
+                                        <button type="submit" name="action" value="set" class="btn btn-warning">
+                                            <i class="fas fa-edit"></i> Set
+                                        </button>
+                                    </div>
+                                </form>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- User Management Table -->
+    <div class="row">
+        <div class="col-12">
+            <div class="admin-card">
+                <div class="admin-card-header">
+                    <h4><i class="fas fa-users-cog"></i> User Management</h4>
+                    <div class="admin-search">
+                        <input type="text" id="userSearch" class="form-control" placeholder="Search users...">
+                        <i class="fas fa-search"></i>
+                    </div>
+                </div>
+                <div class="admin-card-body">
+                    <div class="table-responsive">
+                        <table class="table admin-table" id="usersTable">
+                            <thead>
+                                <tr>
+                                    <th>
+                                        <i class="fas fa-user"></i> Username
+                                    </th>
+                                    <th>
+                                        <i class="fas fa-coins"></i> Balance
+                                    </th>
+                                    <th>
+                                        <i class="fas fa-shield-alt"></i> Role
+                                    </th>
+                                    <th>
+                                        <i class="fas fa-chart-bar"></i> Status
+                                    </th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for user in users|sort(attribute='balance', reverse=true) %}
+                                <tr class="user-row" data-username="{{ user.username|lower }}">
+                                    <td>
+                                        <div class="user-info">
+                                            <div class="user-avatar">
+                                                <i class="fas fa-user-circle"></i>
+                                            </div>
+                                            <span class="username">{{ user.username }}</span>
+                                            {% if user.is_admin %}
+                                                <span class="admin-badge">
+                                                    <i class="fas fa-crown"></i> Admin
+                                                </span>
+                                            {% endif %}
+                                        </div>
+                                    </td>
+                                    <td>
+                                        <span class="balance-amount">{{ "{:,}".format(user.balance) }}</span> coins
+                                    </td>
+                                    <td>
+                                        <span class="role-badge {{ 'admin-role' if user.is_admin else 'user-role' }}">
+                                            {{ 'Administrator' if user.is_admin else 'Player' }}
+                                        </span>
+                                    </td>
+                                    <td>
+                                        <span class="status-indicator {{ 'rich' if user.balance > 10000 else 'moderate' if user.balance > 1000 else 'low' }}">
+                                            {% if user.balance > 10000 %}
+                                                <i class="fas fa-gem"></i> High Roller
+                                            {% elif user.balance > 1000 %}
+                                                <i class="fas fa-star"></i> Active
+                                            {% else %}
+                                                <i class="fas fa-exclamation-triangle"></i> Low Balance
+                                            {% endif %}
+                                        </span>
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<style>
+    .admin-dashboard {
+        padding: 2rem 1rem;
+        background: linear-gradient(135deg, #000000 0%, var(--dark-blue) 50%, #0a0a0a 100%);
+        min-height: 100vh;
+    }
+
+    .admin-header {
+        margin-bottom: 2rem;
+    }
+
+    .admin-title-row {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        text-align: center;
+        flex-wrap: wrap;
+        gap: 1rem;
+    }
+
+    .admin-title {
+        font-size: 2.5rem;
+        font-weight: 700;
+        color: var(--soft-white);
+        margin-bottom: 0.5rem;
+    }
+
+    .admin-subtitle {
+        color: var(--light-gray);
+        font-size: 1.1rem;
+        margin: 0;
+    }
+
+    .admin-actions {
+        display: flex;
+        gap: 1rem;
+        align-items: center;
+    }
+
+    .admin-logout-btn {
+        background: linear-gradient(135deg, var(--accent-red) 0%, #ef4444 100%);
+        border: none;
+        border-radius: 50px;
+        padding: 0.75rem 1.5rem;
+        font-weight: 600;
+        color: white;
+        text-decoration: none;
+        transition: all 0.3s ease;
+        box-shadow: 0 8px 25px rgba(220, 38, 38, 0.3);
+    }
+
+    .admin-logout-btn:hover {
+        background: linear-gradient(135deg, #ef4444 0%, var(--accent-red) 100%);
+        transform: translateY(-2px);
+        box-shadow: 0 12px 35px rgba(220, 38, 38, 0.4);
+        color: white;
+    }
+
+    @media (max-width: 768px) {
+        .admin-title-row {
+            flex-direction: column;
+            text-align: center;
+        }
+        
+        .admin-title {
+            font-size: 2rem;
+        }
+    }
+
+    .stat-card {
+        background: linear-gradient(135deg, #0a0a0a 0%, var(--dark-blue) 100%);
+        border-radius: 15px;
+        overflow: hidden;
+        box-shadow: 0 15px 40px rgba(0, 0, 0, 0.6);
+        border: 1px solid rgba(255, 215, 0, 0.3);
+        transition: transform 0.3s ease, box-shadow 0.3s ease;
+    }
+
+    .stat-card:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 15px 40px rgba(0, 0, 0, 0.4);
+    }
+
+    .stat-card-body {
+        padding: 1.5rem;
+        display: flex;
+        align-items: center;
+    }
+
+    .stat-icon {
+        width: 60px;
+        height: 60px;
+        background: linear-gradient(135deg, var(--primary-gold) 0%, #ffed4e 100%);
+        border-radius: 15px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        margin-right: 1rem;
+        color: var(--dark-blue);
+        font-size: 1.5rem;
+    }
+
+    .stat-info h3 {
+        font-size: 2rem;
+        font-weight: 700;
+        color: var(--soft-white);
+        margin: 0;
+    }
+
+    .stat-info p {
+        color: var(--light-gray);
+        margin: 0;
+        font-size: 0.9rem;
+    }
+
+    .admin-card {
+        background: linear-gradient(135deg, #0a0a0a 0%, var(--dark-blue) 100%);
+        border-radius: 15px;
+        box-shadow: 0 15px 40px rgba(0, 0, 0, 0.6);
+        border: 1px solid rgba(255, 215, 0, 0.3);
+        overflow: hidden;
+    }
+
+    .admin-card-header {
+        background: linear-gradient(135deg, #2d3748 0%, #1a202c 100%);
+        padding: 1.5rem;
+        border-bottom: 1px solid #4a5568;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        flex-wrap: wrap;
+    }
+
+    .admin-card-header h4 {
+        color: var(--primary-gold);
+        margin: 0;
+        font-weight: 600;
+    }
+
+    .admin-search {
+        position: relative;
+        width: 300px;
+        max-width: 100%;
+    }
+
+    .admin-search input {
+        background: var(--dark-blue);
+        border: 1px solid #4a5568;
+        color: var(--soft-white);
+        padding-right: 40px;
+    }
+
+    .admin-search i {
+        position: absolute;
+        right: 12px;
+        top: 50%;
+        transform: translateY(-50%);
+        color: var(--light-gray);
+    }
+
+    .admin-card-body {
+        padding: 1.5rem;
+    }
+
+    .quick-action-form {
+        background: linear-gradient(135deg, #0a0a0a 0%, var(--dark-blue) 100%);
+        padding: 1.5rem;
+        border-radius: 12px;
+        border: 1px solid rgba(255, 215, 0, 0.3);
+        height: 100%;
+        box-shadow: 0 10px 25px rgba(0, 0, 0, 0.5);
+    }
+
+    .quick-action-form h6 {
+        color: var(--primary-gold);
+        margin-bottom: 1rem;
+        font-weight: 600;
+    }
+
+    .admin-table {
+        margin: 0;
+    }
+
+    .admin-table thead th {
+        background: linear-gradient(135deg, #000000 0%, var(--dark-blue) 100%);
+        color: var(--primary-gold);
+        border: none;
+        padding: 1rem 0.75rem;
+        font-weight: 600;
+        text-transform: uppercase;
+        font-size: 0.85rem;
+        letter-spacing: 1px;
+        border-bottom: 2px solid rgba(255, 215, 0, 0.4);
+    }
+
+    .admin-table tbody tr {
+        background: rgba(0, 0, 0, 0.3);
+        border-bottom: 1px solid rgba(255, 215, 0, 0.2);
+        transition: background-color 0.3s ease;
+    }
+
+    .admin-table tbody tr:hover {
+        background: rgba(255, 215, 0, 0.15);
+    }
+
+    .admin-table td {
+        padding: 1rem 0.75rem;
+        color: var(--soft-white);
+        border: none;
+        vertical-align: middle;
+    }
+
+    .user-info {
+        display: flex;
+        align-items: center;
+        gap: 0.75rem;
+    }
+
+    .user-avatar {
+        color: var(--primary-gold);
+        font-size: 1.5rem;
+    }
+
+    .username {
+        font-weight: 600;
+        color: var(--soft-white);
+    }
+
+    .admin-badge {
+        background: linear-gradient(135deg, var(--primary-gold) 0%, #ffed4e 100%);
+        color: var(--dark-blue);
+        padding: 0.25rem 0.5rem;
+        border-radius: 12px;
+        font-size: 0.75rem;
+        font-weight: 600;
+    }
+
+    .balance-amount {
+        font-weight: 700;
+        color: var(--primary-gold);
+        font-size: 1.1rem;
+    }
+
+    .role-badge {
+        padding: 0.4rem 0.8rem;
+        border-radius: 20px;
+        font-size: 0.8rem;
+        font-weight: 600;
+        text-transform: uppercase;
+    }
+
+    .admin-role {
+        background: linear-gradient(135deg, #e53e3e 0%, #fc8181 100%);
+        color: white;
+    }
+
+    .user-role {
+        background: linear-gradient(135deg, #4299e1 0%, #90cdf4 100%);
+        color: white;
+    }
+
+    .status-indicator {
+        padding: 0.4rem 0.8rem;
+        border-radius: 20px;
+        font-size: 0.8rem;
+        font-weight: 600;
+    }
+
+    .status-indicator.rich {
+        background: linear-gradient(135deg, #38a169 0%, #68d391 100%);
+        color: white;
+    }
+
+    .status-indicator.moderate {
+        background: linear-gradient(135deg, #d69e2e 0%, #f6e05e 100%);
+        color: var(--dark-blue);
+    }
+
+    .status-indicator.low {
+        background: linear-gradient(135deg, #e53e3e 0%, #fc8181 100%);
+        color: white;
+    }
+
+
+
+    .form-select, .form-control {
+        background: rgba(0, 0, 0, 0.8);
+        border: 1px solid rgba(255, 215, 0, 0.3);
+        color: var(--soft-white);
+    }
+
+    .form-select:focus, .form-control:focus {
+        background: rgba(0, 0, 0, 0.9);
+        border-color: var(--primary-gold);
+        color: var(--soft-white);
+        box-shadow: 0 0 0 0.2rem rgba(255, 215, 0, 0.25);
+    }
+
+    @media (max-width: 768px) {
+        .admin-card-header {
+            flex-direction: column;
+            gap: 1rem;
+        }
+
+        .admin-search {
+            width: 100%;
+        }
+
+        .stat-card-body {
+            flex-direction: column;
+            text-align: center;
+        }
+
+        .stat-icon {
+            margin-right: 0;
+            margin-bottom: 1rem;
+        }
+    }
+</style>
+
+<script>
+    // Search functionality
+    document.getElementById('userSearch').addEventListener('keyup', function() {
+        const searchTerm = this.value.toLowerCase();
+        const userRows = document.querySelectorAll('.user-row');
+        
+        userRows.forEach(row => {
+            const username = row.dataset.username;
+            if (username.includes(searchTerm)) {
+                row.style.display = '';
+            } else {
+                row.style.display = 'none';
+            }
+        });
+    });
+
+    // Form validation and confirmation
+    document.querySelectorAll('form').forEach(form => {
+        form.addEventListener('submit', function(e) {
+            const action = this.querySelector('button[type="submit"]:focus')?.value || 
+                          this.querySelector('input[name="action"]')?.value;
+            const username = this.querySelector('select[name="username"]')?.value || 
+                           this.querySelector('input[name="username"]')?.value;
+            const amount = this.querySelector('input[name="amount"]')?.value;
+            
+            if (action === 'subtract' && amount) {
+                if (!confirm(`Are you sure you want to remove ${amount} coins from ${username}?`)) {
+                    e.preventDefault();
+                }
+            } else if (action === 'set' && amount) {
+                if (!confirm(`Are you sure you want to set ${username}'s balance to ${amount} coins?`)) {
+                    e.preventDefault();
+                }
+            }
+        });
+    });
+
+    // Add click event listener to focused button for form submission
+    document.querySelectorAll('button[type="submit"]').forEach(button => {
+        button.addEventListener('click', function() {
+            this.focus();
+        });
+    });
+</script>
+{% endblock %}

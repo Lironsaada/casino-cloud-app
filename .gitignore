@@ -5,10 +5,35 @@ __pycache__/
 
 # Virtual environment
 venv/
+.venv/
 
 # Secrets / local data
 users.json
+users.json.backup
+balance_history.json
 .env
+.env.local
+.env.*.local
+
+# IDE / Editor files
+.vscode/
+.idea/
+*.swp
+*.swo
 
 # OS files
 .DS_Store
+Thumbs.db
+
+# Logs
+*.log
+logs/
+
+# Database files
+*.db
+*.sqlite
+*.sqlite3
+
+# Temporary files
+tmp/
+temp/

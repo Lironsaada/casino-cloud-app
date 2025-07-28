@@ -1,14 +1,27 @@
-<!doctype html>
-<title>Blackjack - Bet</title>
-<h2>Blackjack</h2>
-<p>Balance: {{ balance }} coins</p>
-<form method="POST">
-  Place your bet: <input name="bet" required><br>
-  <button type="submit">Start Game</button>
-</form>
-<a href="{{ url_for('menu') }}">Back to menu</a>
-{% with messages = get_flashed_messages() %}
-  {% if messages %}
-    <ul>{% for msg in messages %}<li>{{ msg }}</li>{% endfor %}</ul>
-  {% endif %}
-{% endwith %}
+{% extends "base.html" %}
+
+{% block title %}Blackjack - Place Your Bet{% endblock %}
+
+{% block content %}
+<div class="container">
+    <div class="row justify-content-center">
+        <div class="col-md-6 col-lg-5">
+            <div class="form-card text-center">
+                <h2 class="mb-3"><i class="fas fa-spade text-primary-gold"></i> Blackjack</h2>
+                <p class="mb-4 text-light-gray">Your current balance is: <strong>{{ balance }} coins</strong></p>
+                
+                <form method="POST">
+                    <div class="mb-3">
+                        <label for="bet" class="form-label">Enter your bet amount:</label>
+                        <input type="number" class="form-control" name="bet" id="bet" min="1" max="{{ balance }}" placeholder="e.g., 100" required>
+                    </div>
+                    <div class="d-grid gap-2">
+                        <button type="submit" class="btn btn-primary btn-lg">Deal Cards</button>
+                        <a href="{{ url_for('menu') }}" class="btn btn-secondary">Back to Menu</a>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

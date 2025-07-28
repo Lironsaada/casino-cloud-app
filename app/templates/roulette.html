@@ -1,20 +1,443 @@
-<!doctype html>
-<title>Roulette</title>
-<h2>Roulette</h2>
-<p>Balance: {{ balance }} coins</p>
-<form method="POST">
-  Bet amount: <input name="bet" required><br>
-  Choose color:
-  <select name="color" required>
-    <option value="red">Red</option>
-    <option value="black">Black</option>
-    <option value="green">Green</option>
-  </select><br>
-  <button type="submit">Spin</button>
-</form>
-<a href="{{ url_for('menu') }}">Back to menu</a>
-{% with messages = get_flashed_messages() %}
-  {% if messages %}
-    <ul>{% for msg in messages %}<li>{{ msg }}</li>{% endfor %}</ul>
-  {% endif %}
-{% endwith %}
+{% extends "base.html" %}
+
+{% block title %}Roulette{% endblock %}
+
+{% block content %}
+<div class="container game-container my-5">
+    <div class="row justify-content-center">
+        <div class="col-md-12 col-lg-10">
+            <div class="card game-card text-white">
+                <div class="card-body text-center">
+                    <h2 class="mb-3"><i class="fas fa-dot-circle text-primary-gold"></i> Roulette</h2>
+                    <p class="mb-4 text-light-gray">Your current balance is: <strong>{{ balance }} coins</strong></p>
+                    
+                    <div class="roulette-container" id="rouletteContainer">
+                        <div class="roulette-pointer"></div>
+                        <div class="roulette-track" id="rouletteTrack">
+                            {% set items = [
+                                {'color': 'red'}, {'color': 'black'}, {'color': 'red'}, {'color': 'black'},
+                                {'color': 'red'}, {'color': 'black'}, {'color': 'red'}, {'color': 'green'},
+                                {'color': 'black'}, {'color': 'red'}, {'color': 'black'}, {'color': 'red'},
+                                {'color': 'black'}, {'color': 'red'}, {'color': 'black'}
+                            ] %}
+                            {% for _ in range(15) %}{% for item in items %}<div class="roulette-tile tile-{{ item.color }}"></div>{% endfor %}{% endfor %}
+                        </div>
+                    </div>
+
+                    <div id="roulette-result" class="roulette-result-display my-4">Choose a color and place your bet!</div>
+
+                    <form id="betForm" class="bet-form" method="POST">
+                        <div class="row g-3 justify-content-center align-items-center">
+                            <div class="col-auto"><label for="bet" class="col-form-label">Bet:</label></div>
+                            <div class="col-auto"><input type="number" id="bet" name="bet" class="form-control" value="10" min="1" required></div>
+                            <div class="col-auto">
+                                <select id="color" name="color" class="form-select">
+                                    <option value="red">Red</option>
+                                    <option value="black">Black</option>
+                                    <option value="green">Green</option>
+                                </select>
+                            </div>
+                            <div class="col-auto"><button type="submit" class="btn btn-primary btn-lg"><i class="fas fa-play-circle"></i> Spin</button></div>
+                        </div>
+                    </form>
+                </div>
+            </div>
+            <!-- Game Info Sections -->
+            <div class="row mt-4">
+                <div class="col-md-6 mb-3">
+                    <div class="card game-info-card h-100">
+                        <div class="card-body">
+                            <h5 class="card-title text-center"><i class="fas fa-gavel"></i> Game Rules & Payouts</h5>
+                            <hr>
+                            <ul class="list-unstyled text-center">
+                                <li>Bet on <strong>Red</strong>: 2x Payout</li>
+                                <li>Bet on <strong>Black</strong>: 2x Payout</li>
+                                <li>Bet on <strong>Green</strong>: 14x Payout</li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-6 mb-3">
+                    <div class="card game-info-card h-100">
+                        <div class="card-body">
+                            <h5 class="card-title text-center"><i class="fas fa-percentage"></i> Odds & Probabilities</h5>
+                            <hr>
+                            <ul class="list-unstyled text-center">
+                                <li><strong>Red:</strong> 7 tiles (46.7% chance)</li>
+                                <li><strong>Black:</strong> 7 tiles (46.7% chance)</li>
+                                <li><strong>Green:</strong> 1 tile (6.7% chance)</li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<style>
+    .game-info-card {
+        background: linear-gradient(135deg, var(--dark-blue-tint) 0%, var(--dark-blue-lighter) 100%);
+        color: white;
+        border: 1px solid rgba(255, 215, 0, 0.2);
+        box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+    }
+    .game-info-card .card-title {
+        color: var(--primary-gold);
+        font-weight: 600;
+    }
+    .game-info-card hr {
+        border-top: 1px solid rgba(255, 215, 0, 0.3);
+    }
+    .roulette-container {
+        position: relative; 
+        width: 100%; 
+        height: 120px; 
+        background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
+        border-radius: 20px; 
+        padding: 15px; 
+        box-shadow: 
+            inset 0 0 30px rgba(0,0,0,0.8),
+            0 10px 30px rgba(0,0,0,0.5); 
+        overflow: hidden;
+        border: 2px solid rgba(255, 215, 0, 0.3);
+    }
+    .roulette-pointer {
+        position: absolute; 
+        width: 6px; 
+        height: 90px; 
+        background: linear-gradient(180deg, var(--primary-gold) 0%, var(--secondary-gold) 100%);
+        left: 50%; 
+        top: 15px; 
+        transform: translateX(-50%); 
+        z-index: 10; 
+        box-shadow: 
+            0 0 20px rgba(255, 215, 0, 0.8),
+            0 0 40px rgba(255, 215, 0, 0.4);
+        border-radius: 3px;
+    }
+    .roulette-pointer::before {
+        content: '';
+        position: absolute;
+        top: -8px;
+        left: 50%;
+        transform: translateX(-50%);
+        width: 0;
+        height: 0;
+        border-left: 8px solid transparent;
+        border-right: 8px solid transparent;
+        border-bottom: 12px solid var(--primary-gold);
+        filter: drop-shadow(0 0 8px rgba(255, 215, 0, 0.6));
+    }
+    .roulette-track {
+        position: absolute; 
+        top: 15px; 
+        left: 0; 
+        height: 90px; 
+        display: flex; 
+        will-change: transform;
+        opacity: 1;
+        visibility: visible;
+    }
+    .roulette-tile {
+        width: 90px; 
+        height: 90px; 
+        border-radius: 15px; 
+        margin: 0 6px;
+        flex-shrink: 0; 
+        transition: transform 0.3s, box-shadow 0.3s;
+        position: relative;
+        border: 2px solid rgba(255, 255, 255, 0.3);
+        opacity: 1;
+        will-change: transform;
+        min-width: 90px;
+    }
+    .roulette-tile::before {
+        content: '';
+        position: absolute;
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%);
+        width: 20px;
+        height: 20px;
+        border-radius: 50%;
+        background: rgba(255, 255, 255, 0.3);
+    }
+    .roulette-tile.tile-red { 
+        background: linear-gradient(135deg, #dc2626 0%, #ef4444 100%);
+        box-shadow: 0 4px 15px rgba(220, 38, 38, 0.3);
+    }
+    .roulette-tile.tile-black { 
+        background: linear-gradient(135deg, #1f2937 0%, #374151 100%);
+        box-shadow: 0 4px 15px rgba(0, 0, 0, 0.5);
+    }
+    .roulette-tile.tile-green { 
+        background: linear-gradient(135deg, #16a34a 0%, #22c55e 100%);
+        box-shadow: 0 4px 15px rgba(22, 163, 74, 0.3);
+    }
+    .roulette-tile.highlight {
+        box-shadow: 
+            0 0 30px 8px var(--primary-gold),
+            0 0 60px 12px rgba(255, 215, 0, 0.3),
+            inset 0 0 20px rgba(255, 215, 0, 0.2); 
+        transform: scale(1.1);
+        border-color: var(--primary-gold);
+        animation: winPulse 1s ease-in-out infinite alternate;
+    }
+    
+    @keyframes winPulse {
+        from { 
+            box-shadow: 
+                0 0 30px 8px var(--primary-gold),
+                0 0 60px 12px rgba(255, 215, 0, 0.3),
+                inset 0 0 20px rgba(255, 215, 0, 0.2);
+        }
+        to { 
+            box-shadow: 
+                0 0 40px 12px var(--secondary-gold),
+                0 0 80px 16px rgba(255, 215, 0, 0.5),
+                inset 0 0 30px rgba(255, 215, 0, 0.4);
+        }
+    }
+    
+    .roulette-result-display { 
+        font-size: 1.6rem; 
+        font-weight: 700; 
+        min-height: 50px;
+        text-shadow: 0 2px 4px rgba(0, 0, 0, 0.5);
+    }
+    
+    .spinning {
+        animation: spinEffect 0.2s ease-in-out infinite alternate;
+    }
+    
+    @keyframes spinEffect {
+        from { opacity: 1; }
+        to { opacity: 0.9; }
+    }
+</style>
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const track = document.getElementById('rouletteTrack');
+    const betForm = document.getElementById('betForm');
+    const resultDisplay = document.getElementById('roulette-result');
+    const balanceDisplay = document.getElementById('balance');
+    const formControls = betForm.querySelectorAll('input, select, button');
+    
+    const items = [{'color':'red'},{'color':'black'},{'color':'red'},{'color':'black'},{'color':'red'},{'color':'black'},{'color':'red'},{'color':'green'},{'color':'black'},{'color':'red'},{'color':'black'},{'color':'red'},{'color':'black'},{'color':'red'},{'color':'black'}];
+    const totalItemsInSet = items.length;
+    const tileWidth = 90 + 12; // tile width + margin
+    const totalSets = 15;
+    let isSpinning = false;
+    let animationId = null;
+    
+    // Create audio context for better sound control
+    let audioContext = null;
+    
+    function initAudio() {
+        if (!audioContext) {
+            audioContext = new (window.AudioContext || window.webkitAudioContext)();
+        }
+    }
+    
+    function playSpinSound() {
+        initAudio();
+        // Create a spinning sound effect
+        const oscillator = audioContext.createOscillator();
+        const gainNode = audioContext.createGain();
+        
+        oscillator.connect(gainNode);
+        gainNode.connect(audioContext.destination);
+        
+        oscillator.type = 'sine';
+        oscillator.frequency.setValueAtTime(200, audioContext.currentTime);
+        oscillator.frequency.exponentialRampToValueAtTime(100, audioContext.currentTime + 0.5);
+        
+        gainNode.gain.setValueAtTime(0.1, audioContext.currentTime);
+        gainNode.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + 0.5);
+        
+        oscillator.start(audioContext.currentTime);
+        oscillator.stop(audioContext.currentTime + 0.5);
+    }
+
+    function easeOutCubic(t) {
+        return 1 - Math.pow(1 - t, 3);
+    }
+    
+    function easeOutQuart(t) {
+        return 1 - Math.pow(1 - t, 4);
+    }
+
+    function animateToPosition(targetPosition, duration = 4000) {
+        return new Promise((resolve) => {
+            if (animationId) {
+                cancelAnimationFrame(animationId);
+            }
+            
+            const startTime = performance.now();
+            const startPosition = getCurrentPosition();
+            const distance = targetPosition - startPosition;
+            
+            // Add fewer extra spins for better control
+            const extraSpins = 2 + Math.random() * 1.5; // 2-3.5 extra full rotations
+            const totalDistance = distance + (extraSpins * totalSets * totalItemsInSet * tileWidth);
+            
+            track.classList.add('spinning');
+            
+            function animate(currentTime) {
+                const elapsed = currentTime - startTime;
+                const progress = Math.min(elapsed / duration, 1);
+                
+                // Use gentler easing for smoother deceleration
+                const eased = easeOutCubic(progress);
+                const currentPosition = startPosition + (totalDistance * eased);
+                
+                track.style.transform = `translateX(${currentPosition}px)`;
+                
+                if (progress < 1) {
+                    animationId = requestAnimationFrame(animate);
+                } else {
+                    track.classList.remove('spinning');
+                    track.style.transform = `translateX(${targetPosition}px)`;
+                    resolve();
+                }
+            }
+            
+            animationId = requestAnimationFrame(animate);
+        });
+    }
+    
+    function getCurrentPosition() {
+        const transform = track.style.transform;
+        const match = transform.match(/translateX\(([^)]+)px\)/);
+        return match ? parseFloat(match[1]) : 0;
+    }
+
+    async function spinTo(resultIndex) {
+        if (isSpinning) return;
+        isSpinning = true;
+        clearHighlights();
+        setFormDisabled(true);
+        
+        resultDisplay.textContent = 'Spinning...';
+        resultDisplay.style.color = 'var(--primary-gold)';
+        
+        // Play spinning sound
+        playSpinSound();
+        
+        // Calculate target position
+        const targetSet = Math.floor(totalSets / 2);
+        const targetTileIndex = (targetSet * totalItemsInSet) + resultIndex;
+        const containerWidth = document.getElementById('rouletteContainer').offsetWidth;
+        const targetPosition = (targetTileIndex * tileWidth) + (tileWidth / 2) - (containerWidth / 2);
+        
+        // Add slight random offset for more natural feel
+        const randomOffset = (Math.random() - 0.5) * 30;
+        const finalPosition = -(targetPosition + randomOffset);
+        
+                 // Animate to final position
+         await animateToPosition(finalPosition, 4000);
+         
+         // Highlight the winning tile
+         const tiles = track.querySelectorAll('.roulette-tile');
+         if (tiles[targetTileIndex]) {
+             tiles[targetTileIndex].classList.add('highlight');
+         }
+         
+         isSpinning = false;
+         setFormDisabled(false);
+         
+         return 4000;
+    }
+
+    function resetToMiddle() {
+        const targetSet = Math.floor(totalSets / 2);
+        const middlePosition = (targetSet * totalItemsInSet * tileWidth) + (tileWidth / 2) - (document.getElementById('rouletteContainer').offsetWidth / 2);
+        track.style.transition = 'none';
+        track.style.transform = `translateX(${-middlePosition}px)`;
+    }
+    
+    resetToMiddle();
+
+    function setFormDisabled(disabled) { 
+        formControls.forEach(el => el.disabled = disabled); 
+        if (disabled) {
+            betForm.style.opacity = '0.6';
+        } else {
+            betForm.style.opacity = '1';
+        }
+    }
+    
+    function clearHighlights() { 
+        track.querySelectorAll('.highlight').forEach(el => el.classList.remove('highlight')); 
+    }
+    
+    function updateBalance(newBalance) { 
+        if(balanceDisplay) balanceDisplay.innerHTML = `<i class="fas fa-coins"></i> Balance: ${newBalance} coins`; 
+    }
+
+    betForm.addEventListener('submit', function(e) {
+        e.preventDefault();
+        resetToMiddle();
+        clearHighlights();
+
+        fetch('/roulette', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json', 'X-Requested-With': 'XMLHttpRequest' },
+            body: JSON.stringify({ bet: betForm.bet.value, color: betForm.color.value })
+        })
+        .then(r => r.json())
+        .then(data => {
+            if (data.error) {
+                resultDisplay.textContent = data.error;
+                resultDisplay.style.color = '#e74c3c';
+                return;
+            }
+            
+            let resultIndex;
+            const matchingIndices = items.map((item, index) => item.color === data.result_color ? index : -1).filter(index => index !== -1);
+            resultIndex = matchingIndices.length > 0 ? matchingIndices[Math.floor(Math.random() * matchingIndices.length)] : 0;
+
+            const spinDuration = spinTo(resultIndex);
+            
+            setTimeout(() => {
+                resultDisplay.textContent = data.message;
+                resultDisplay.style.color = data.win ? '#22c55e' : '#ef4444';
+                updateBalance(data.balance);
+                
+                // Play win/loss sound
+                if (data.win) {
+                    initAudio();
+                    const oscillator = audioContext.createOscillator();
+                    const gainNode = audioContext.createGain();
+                    
+                    oscillator.connect(gainNode);
+                    gainNode.connect(audioContext.destination);
+                    
+                    oscillator.type = 'sine';
+                    oscillator.frequency.setValueAtTime(400, audioContext.currentTime);
+                    oscillator.frequency.exponentialRampToValueAtTime(600, audioContext.currentTime + 0.3);
+                    
+                    gainNode.gain.setValueAtTime(0.2, audioContext.currentTime);
+                    gainNode.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + 0.3);
+                    
+                    oscillator.start(audioContext.currentTime);
+                    oscillator.stop(audioContext.currentTime + 0.3);
+                }
+            }, 4000);
+        })
+        .catch(() => {
+            isSpinning = false;
+            setFormDisabled(false);
+            resultDisplay.textContent = 'Network Error.';
+            resultDisplay.style.color = '#e74c3c';
+        });
+    });
+    
+    // Initialize audio on first user interaction
+    document.addEventListener('click', initAudio, { once: true });
+});
+</script>
+{% endblock %}

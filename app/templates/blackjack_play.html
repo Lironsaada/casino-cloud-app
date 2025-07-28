@@ -1,69 +1,126 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8" />
-    <title>Blackjack - Playing</title>
-    <style>
-        body {
-            font-family: Arial, sans-serif;
-            max-width: 600px;
-            margin: 2rem auto;
-            padding: 1rem;
-            background-color: #f9f9f9;
-            text-align: center;
-        }
-        .hand {
-            margin: 1rem 0;
-            font-size: 2rem;
-        }
-        .cards {
-            font-size: 3rem;
-            margin: 0.5rem 0;
-        }
-        .buttons {
-            margin-top: 1.5rem;
-        }
-        button {
-            font-size: 1.2rem;
-            padding: 0.5rem 1rem;
-            margin: 0 0.5rem;
-            cursor: pointer;
-        }
-        .balance {
-            margin-bottom: 1rem;
-            font-weight: bold;
-        }
-    </style>
-</head>
-<body>
-    <h1>Blackjack</h1>
-    <div class="balance">Balance: {{ balance }} coins</div>
+{% extends "base.html" %}
 
-    <div class="hand">
-        <div>Dealer's Hand:</div>
-        <div class="cards">
-            {{ dealer_hand[0] }}
+{% block title %}Blackjack{% endblock %}
+
+{% block content %}
+<div class="container blackjack-container">
+    <div class="text-center mb-4">
+        <h2>Blackjack</h2>
+        <p class="lead text-light-gray">Your Bet: <span class="text-primary-gold">{{ bj['bet'] }} coins</span></p>
+    </div>
+
+    <!-- Dealer's Hand -->
+    <div class="mb-5">
+        <h3 class="text-center hand-title">Dealer's Hand</h3>
+        <div class="playing-cards-container">
             {% if bj_state == 'playing' %}
-                🂠 <!-- Hidden card symbol -->
+                <!-- Show only first card during play -->
+                <div class="card-display">{{ dealer_hand[0] }}</div>
+                <div class="card-display hole-card">
+                    <div class="card-back">?</div>
+                </div>
             {% else %}
-                {{ dealer_hand[1] }}
+                <!-- Show all cards when game is over -->
+                {% for card in dealer_hand %}
+                    <div class="card-display">{{ card }}</div>
+                {% endfor %}
             {% endif %}
         </div>
+        {% if bj_state == 'playing' %}
+            <p class="text-center hand-value">Showing: {{ dealer_hand[0][:-1] }}</p>
+        {% else %}
+            <p class="text-center hand-value">Value: {{ dealer_value }}</p>
+        {% endif %}
     </div>
 
-    <div class="hand">
-        <div>Your Hand: ({{ player_value }})</div>
-        <div class="cards">
+    <!-- Player's Hand -->
+    <div class="mb-5">
+        <h3 class="text-center hand-title">Your Hand</h3>
+        <div class="playing-cards-container">
             {% for card in player_hand %}
-                {{ card }}
+                <div class="card-display">{{ card }}</div>
             {% endfor %}
         </div>
+        <p class="text-center hand-value">Value: {{ player_value }}</p>
     </div>
 
-    <form method="post" class="buttons">
-        <button type="submit" name="action" value="hit">Hit</button>
-        <button type="submit" name="action" value="stand">Stand</button>
-    </form>
+    <!-- Action Buttons -->
+    <div class="action-buttons text-center">
+        {% if bj_state == 'playing' %}
+            <form method="POST" class="d-inline-block">
+                <button type="submit" name="action" value="hit" class="btn btn-lg btn-success me-2">
+                    <i class="fas fa-plus"></i> Hit
+                </button>
+                <button type="submit" name="action" value="stand" class="btn btn-lg btn-danger me-2">
+                    <i class="fas fa-hand-paper"></i> Stand
+                </button>
+                
+                {% if player_hand|length == 2 and balance >= bj['bet'] %}
+                <button type="submit" name="action" value="double" class="btn btn-lg btn-warning me-2">
+                    <i class="fas fa-2x"></i> Double Down
+                </button>
+                {% endif %}
+                
+                {% if player_hand|length == 2 and player_hand[0][:-1] == player_hand[1][:-1] and balance >= bj['bet'] %}
+                <button type="submit" name="action" value="split" class="btn btn-lg btn-info">
+                    <i class="fas fa-cut"></i> Split
+                </button>
+                {% endif %}
+            </form>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}
 
-</body>
-</html>
+{% block scripts %}
+<style>
+    .blackjack-container {
+        max-width: 800px;
+    }
+    .hand-title {
+        color: var(--primary-gold);
+        text-transform: uppercase;
+        letter-spacing: 2px;
+        font-size: 1.2rem;
+        margin-bottom: 1rem;
+    }
+    .playing-cards-container {
+        display: flex;
+        justify-content: center;
+        gap: 15px;
+        min-height: 120px;
+    }
+    .card-display {
+        width: 80px;
+        height: 110px;
+        background-color: var(--soft-white);
+        color: var(--dark-blue);
+        border: 1px solid var(--light-gray);
+        border-radius: 10px;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        font-size: 2rem;
+        font-weight: 700;
+        box-shadow: 0 5px 15px rgba(0,0,0,0.2);
+    }
+    .hand-value {
+        font-size: 1.2rem;
+        font-weight: 600;
+        margin-top: 1rem;
+    }
+    .action-buttons .btn {
+        padding: 1rem 2rem;
+        font-size: 1.1rem;
+    }
+    .hole-card {
+        background: linear-gradient(135deg, #1a202c 0%, #2d3748 100%);
+        border: 2px solid var(--primary-gold);
+    }
+    .card-back {
+        color: var(--primary-gold);
+        font-size: 3rem;
+        font-weight: bold;
+    }
+</style>
+{% endblock %}
