@@ -2,7 +2,7 @@ name: Deploy Casino App
 
 on:
   push:
-    branches: [ main ]
+    branches: [ main, feature/improvements-and-fixes ]
   pull_request:
     branches: [ main ]
 
