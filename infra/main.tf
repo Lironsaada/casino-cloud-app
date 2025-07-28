@@ -35,11 +35,11 @@ resource "azurerm_kubernetes_cluster" "main" {
     type = "SystemAssigned"
   }
 
-  addon_profile {
-    oms_agent {
-      enabled                    = true
-      log_analytics_workspace_id = azurerm_log_analytics_workspace.main.id
-    }
+  azure_policy_enabled             = true
+  http_application_routing_enabled = false
+  
+  oms_agent {
+    log_analytics_workspace_id = azurerm_log_analytics_workspace.main.id
   }
 
   depends_on = [azurerm_log_analytics_workspace.main]

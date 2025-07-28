@@ -240,9 +240,23 @@
 
 {% block scripts %}
 <style>
+    /* Override body background for admin page */
+    body {
+        background: #0a0a0a !important;
+        background-attachment: fixed !important;
+    }
+    
+    body::before {
+        display: none !important;
+    }
+    
+    .content-wrapper {
+        background: #0a0a0a !important;
+    }
+    
     .admin-dashboard {
         padding: 2rem 1rem;
-        background: linear-gradient(135deg, #000000 0%, var(--dark-blue) 50%, #0a0a0a 100%);
+        background: #0a0a0a !important;
         min-height: 100vh;
     }
 
@@ -401,6 +415,20 @@
 
     .admin-card-body {
         padding: 1.5rem;
+        background: #0a0a0a !important;
+    }
+    
+    .table-responsive {
+        background: #0a0a0a !important;
+    }
+    
+    /* Override Bootstrap table styles */
+    .table {
+        --bs-table-bg: #0a0a0a !important;
+        --bs-table-striped-bg: #0a0a0a !important;
+        --bs-table-hover-bg: rgba(255, 215, 0, 0.15) !important;
+        --bs-table-color: var(--soft-white) !important;
+        background: #0a0a0a !important;
     }
 
     .quick-action-form {
@@ -420,11 +448,12 @@
 
     .admin-table {
         margin: 0;
+        background: #0a0a0a !important;
     }
 
     .admin-table thead th {
-        background: linear-gradient(135deg, #000000 0%, var(--dark-blue) 100%);
-        color: var(--primary-gold);
+        background: #0a0a0a !important;
+        color: var(--primary-gold) !important;
         border: none;
         padding: 1rem 0.75rem;
         font-weight: 600;
@@ -435,20 +464,21 @@
     }
 
     .admin-table tbody tr {
-        background: rgba(0, 0, 0, 0.3);
+        background: #0a0a0a !important;
         border-bottom: 1px solid rgba(255, 215, 0, 0.2);
         transition: background-color 0.3s ease;
     }
 
     .admin-table tbody tr:hover {
-        background: rgba(255, 215, 0, 0.15);
+        background: rgba(255, 215, 0, 0.15) !important;
     }
 
     .admin-table td {
         padding: 1rem 0.75rem;
-        color: var(--soft-white);
+        color: var(--soft-white) !important;
         border: none;
         vertical-align: middle;
+        background: #0a0a0a !important;
     }
 
     .user-info {

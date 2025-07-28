@@ -3,7 +3,12 @@ kind: Deployment
 metadata:
   name: casino-app
 spec:
-  replicas: 1
+  replicas: 3
+  strategy:
+    type: RollingUpdate
+    rollingUpdate:
+      maxUnavailable: 1
+      maxSurge: 1
   selector:
     matchLabels:
       app: casino
@@ -21,9 +26,37 @@ spec:
           image: lironsaada/casino-app:latest
           ports:
             - containerPort: 5000
+          env:
+            - name: SECRET_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: casino-secrets
+                  key: secret-key
+            - name: FLASK_ENV
+              value: "production"
+          resources:
+            requests:
+              memory: "128Mi"
+              cpu: "100m"
+            limits:
+              memory: "256Mi"
+              cpu: "200m"
+          livenessProbe:
+            httpGet:
+              path: /metrics
+              port: 5000
+            initialDelaySeconds: 30
+            periodSeconds: 10
+          readinessProbe:
+            httpGet:
+              path: /metrics
+              port: 5000
+            initialDelaySeconds: 5
+            periodSeconds: 5
           volumeMounts:
             - name: users-volume
               mountPath: /data
       volumes:
         - name: users-volume
-          emptyDir: {}
+          persistentVolumeClaim:
+            claimName: casino-pvc

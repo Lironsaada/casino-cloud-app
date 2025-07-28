@@ -70,6 +70,20 @@
 
 {% block scripts %}
 <style>
+    /* Override body background for admin auth page */
+    body {
+        background: #0a0a0a !important;
+        background-attachment: fixed !important;
+    }
+    
+    body::before {
+        display: none !important;
+    }
+    
+    .content-wrapper {
+        background: #0a0a0a !important;
+    }
+
     .admin-header {
         margin-bottom: 2rem;
     }

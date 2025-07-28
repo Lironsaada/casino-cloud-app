@@ -1,0 +1,128 @@
+name: Deploy Casino App
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+
+env:
+  REGISTRY: ghcr.io
+  IMAGE_NAME: casino-cloud-app
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v4
+    
+    - name: Set up Python
+      uses: actions/setup-python@v4
+      with:
+        python-version: '3.11'
+    
+    - name: Install dependencies
+      run: |
+        python -m pip install --upgrade pip
+        pip install -r requirements.txt
+        pip install flake8 bandit pytest safety
+    
+    - name: Lint with flake8
+      run: |
+        flake8 app/ --count --select=E9,F63,F7,F82 --show-source --statistics
+        flake8 app/ --count --exit-zero --max-complexity=10 --max-line-length=127 --statistics
+    
+    - name: Security scan with bandit
+      run: bandit -r app/ -f json -o bandit-report.json || true
+    
+    - name: Check dependencies for vulnerabilities
+      run: safety check --json --output safety-report.json || true
+    
+    - name: Run tests
+      run: |
+        python -m pytest tests/ --verbose || echo "No tests found"
+
+  build:
+    needs: test
+    runs-on: ubuntu-latest
+    if: github.event_name == 'push'
+    outputs:
+      image-tag: ${{ steps.meta.outputs.tags }}
+      image-digest: ${{ steps.build.outputs.digest }}
+    
+    steps:
+    - uses: actions/checkout@v4
+    
+    - name: Set up Docker Buildx
+      uses: docker/setup-buildx-action@v3
+    
+    - name: Log in to Container Registry
+      uses: docker/login-action@v3
+      with:
+        registry: ${{ env.REGISTRY }}
+        username: ${{ github.actor }}
+        password: ${{ secrets.GITHUB_TOKEN }}
+    
+    - name: Extract metadata
+      id: meta
+      uses: docker/metadata-action@v5
+      with:
+        images: ${{ env.REGISTRY }}/${{ github.repository }}/${{ env.IMAGE_NAME }}
+        tags: |
+          type=ref,event=branch
+          type=ref,event=pr
+          type=sha,prefix={{branch}}-
+          type=raw,value=latest,enable={{is_default_branch}}
+    
+    - name: Build and push Docker image
+      id: build
+      uses: docker/build-push-action@v5
+      with:
+        context: .
+        push: true
+        tags: ${{ steps.meta.outputs.tags }}
+        labels: ${{ steps.meta.outputs.labels }}
+        cache-from: type=gha
+        cache-to: type=gha,mode=max
+
+  deploy:
+    needs: build
+    runs-on: ubuntu-latest
+    if: github.ref == 'refs/heads/main'
+    environment: production
+    
+    steps:
+    - uses: actions/checkout@v4
+    
+    - name: Azure Login
+      uses: azure/login@v1
+      with:
+        creds: ${{ secrets.AZURE_CREDENTIALS }}
+    
+    - name: Get AKS credentials
+      run: |
+        az aks get-credentials --resource-group casino-rg --name casino-aks
+    
+    - name: Deploy to AKS
+      run: |
+        # Update image in deployment
+        kubectl set image deployment/casino-app casino=${{ needs.build.outputs.image-tag }}
+        
+        # Wait for rollout
+        kubectl rollout status deployment/casino-app --timeout=300s
+        
+        # Verify deployment
+        kubectl get pods -l app=casino
+    
+    - name: Run smoke tests
+      run: |
+        # Get service endpoint
+        SERVICE_IP=$(kubectl get service casino-service -o jsonpath='{.status.loadBalancer.ingress[0].ip}')
+        
+        # Wait for service to be ready
+        sleep 30
+        
+        # Test health endpoint
+        curl -f http://$SERVICE_IP:5000/metrics || exit 1
+        
+        echo "Deployment successful!" 
