@@ -11,6 +11,10 @@ spec:
     metadata:
       labels:
         app: casino
+      annotations:
+        prometheus.io/scrape: "true"
+        prometheus.io/port: "5000"
+        prometheus.io/path: "/metrics"
     spec:
       containers:
         - name: casino

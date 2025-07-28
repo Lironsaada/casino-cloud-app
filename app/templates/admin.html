@@ -173,10 +173,10 @@
                     </div>
                 </div>
                 <div class="admin-card-body">
-                    <div class="table-responsive">
+                <div class="table-responsive">
                         <table class="table admin-table" id="usersTable">
-                            <thead>
-                                <tr>
+                        <thead>
+                            <tr>
                                     <th>
                                         <i class="fas fa-user"></i> Username
                                     </th>
@@ -189,9 +189,9 @@
                                     <th>
                                         <i class="fas fa-chart-bar"></i> Status
                                     </th>
-                                </tr>
-                            </thead>
-                            <tbody>
+                            </tr>
+                        </thead>
+                        <tbody>
                                 {% for user in users|sort(attribute='balance', reverse=true) %}
                                 <tr class="user-row" data-username="{{ user.username|lower }}">
                                     <td>
@@ -225,16 +225,16 @@
                                                 <i class="fas fa-exclamation-triangle"></i> Low Balance
                                             {% endif %}
                                         </span>
-                                    </td>
-                                </tr>
-                                {% endfor %}
-                            </tbody>
-                        </table>
-                    </div>
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
                 </div>
             </div>
         </div>
     </div>
+</div>
 </div>
 {% endblock %}
 
@@ -513,8 +513,8 @@
     }
 
     .status-indicator.moderate {
-        background: linear-gradient(135deg, #d69e2e 0%, #f6e05e 100%);
-        color: var(--dark-blue);
+        background: linear-gradient(135deg, #b7791f 0%, #d69e2e 100%);
+        color: white;
     }
 
     .status-indicator.low {
