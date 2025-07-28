@@ -1,325 +1,450 @@
-# 🎰 Casino Cloud App 🎰
+# 🎰 Casino Cloud App - DevOps Infrastructure
 
-*A luxurious, full-featured casino web application built with Flask*
+*Production-ready casino application with enterprise-grade DevOps architecture*
 
-**Developed by Liron Saada** | Built with ❤️ using Flask & Bootstrap
-
----
-
-## 🌟 Overview
-
-Casino Cloud App is a sophisticated web-based casino platform featuring multiple classic casino games, user management, social features, and a comprehensive admin panel. The application combines elegant UI design with robust backend functionality to deliver an authentic casino experience.
+**DevOps Engineering by Liron Saada** | Cloud-Native • Kubernetes • Infrastructure as Code
 
 ---
 
-## 🎮 Game Features
+## 🏗️ Infrastructure Overview
 
-### 🃏 **Blackjack**
-- **Interactive card animations** with realistic playing cards
-- **Natural Blackjack** detection with 3:2 payouts
-- **Double Down** functionality with proper betting mechanics
-- **Automatic game resolution** (bust detection, 21 auto-win)
-- **Dealer AI** following standard casino rules (hit on 16, stand on 17)
+This project demonstrates modern DevOps practices for deploying a scalable casino application on Azure cloud infrastructure using containerization, orchestration, and infrastructure as code.
 
-### 🎡 **Roulette**
-- **Realistic spinning wheel** with smooth physics-based animation
-- **Multiple betting options**: Red, Black, Green
-- **Visual feedback** with spinning animation and result highlighting
-- **Authentic payouts**: 2x for Red/Black, 14x for Green
-- **Sound effects** for enhanced gaming experience
-
-### 🎰 **Slots**
-- **Interactive slot machine** with spinning reel animations
-- **Multiple betting tiers**: 10, 100, 1000 coins
-- **Various symbols**: 🍒, 🔔, 🍋, ⭐, 💎, 7️⃣
-- **Progressive payouts** based on symbol combinations
-- **Jackpot system** for triple matches
-
----
-
-## 🔧 Core Features
-
-### 👤 **User Management**
-- **Secure authentication** with hashed passwords (Werkzeug)
-- **Persistent user accounts** with balance tracking
-- **Session management** with secure cookies
-- **User registration** and login system
-
-### 💰 **Financial System**
-- **Real-time balance updates** across all games
-- **Transaction logging** for all bets and tips
-- **Secure balance management** with validation
-- **Anti-cheat measures** and input sanitization
-
-### 🎁 **Social Features**
-- **Tip system** for sending coins between users
-- **Real-time balance updates** for both sender and receiver
-- **Transaction history** tracking for all activities
-- **User-friendly interface** with clear feedback
-
-### 👑 **Admin Panel**
-- **Password-protected access** (password: "admin")
-- **User balance management** (add, subtract, set)
-- **User statistics dashboard** with total users and balances
-- **Quick action forms** for efficient administration
-- **Dark-themed professional interface**
-
----
-
-## 🎨 Design & UI
-
-### ✨ **Visual Design**
-- **Luxurious color palette** with gold accents and deep blues
-- **Animated background particles** for dynamic ambiance
-- **Gradient backgrounds** and professional shadows
-- **Responsive design** optimized for all devices
-- **Custom animations** for enhanced user experience
-
-### 🃏 **Interactive Elements**
-- **Custom card animations** in Blackjack (Ace + 10 reveal)
-- **Spinning roulette wheel** with realistic physics
-- **Slot machine lever** with pull-down animation
-- **Hover effects** and smooth transitions throughout
-- **Professional button styling** with gradients and shadows
+### **Architecture Components**
+- **🐳 Containerization**: Docker multi-stage builds
+- **☸️ Orchestration**: Azure Kubernetes Service (AKS)
+- **🏗️ Infrastructure**: Terraform (Azure Provider)
+- **🔄 CI/CD**: GitHub Actions pipeline
+- **📊 Monitoring**: Azure Log Analytics + Container Insights
+- **🔐 Security**: Azure Container Registry, RBAC, Secrets Management
 
 ---
 
 ## 🛠 Technology Stack
 
-### **Backend**
-- **Flask** - Python web framework
-- **Werkzeug** - Password hashing and security
-- **JSON** - Data persistence and user storage
-- **Session management** - Secure user authentication
+### **Infrastructure Layer**
+```yaml
+Cloud Provider: Microsoft Azure
+Compute: Azure Kubernetes Service (AKS)
+Container Registry: Azure Container Registry (ACR)
+Storage: Azure Managed Disks (Persistent Volumes)
+Networking: Azure Load Balancer, Virtual Network
+Monitoring: Azure Log Analytics, Container Insights
+```
 
-### **Frontend**
-- **Bootstrap 5** - Responsive CSS framework
-- **Font Awesome** - Professional icon library
-- **Custom CSS** - Luxurious casino-themed styling
-- **Vanilla JavaScript** - Interactive animations and AJAX
+### **DevOps Toolchain**
+```yaml
+IaC: Terraform v1.5+
+Orchestration: Kubernetes v1.27+
+Containerization: Docker & Docker Compose
+CI/CD: GitHub Actions
+Configuration: Kubernetes ConfigMaps & Secrets
+Scaling: Horizontal Pod Autoscaler (HPA)
+```
 
-### **Security**
-- **Environment variables** for sensitive configuration
-- **Password hashing** using Werkzeug security
-- **Input validation** and sanitization
-- **Session-based authentication**
-- **Comprehensive `.gitignore`** for data protection
+### **Application Stack**
+```yaml
+Runtime: Python 3.11 (Flask microservice)
+Frontend: Bootstrap 5, Vanilla JS
+Data: JSON-based storage (transitioning to PostgreSQL)
+Session: Redis-compatible (planned)
+```
 
 ---
 
-## 🚀 Quick Start
+## 🚀 Infrastructure Deployment
 
 ### **Prerequisites**
-- Python 3.7+
-- Flask and dependencies (see requirements.txt)
+- Azure CLI (`az`) authenticated
+- Terraform v1.5+
+- kubectl configured
+- Docker Engine
+- GitHub repository with Actions enabled
 
-### **Installation**
+### **1. Infrastructure Provisioning**
 
-1. **Clone the repository**
-   ```bash
-   git clone https://github.com/lironsaada/casino-cloud-app.git
-   cd casino-cloud-app
-   ```
-
-2. **Set up virtual environment**
-   ```bash
-   python3 -m venv venv
-   source venv/bin/activate  # On Windows: venv\Scripts\activate
-   ```
-
-3. **Install dependencies**
-   ```bash
-   pip install -r requirements.txt
-   ```
-
-4. **Set up environment variables**
-   ```bash
-   export FLASK_SECRET_KEY="your-secret-key-here"
-   # Or create a .env file with: FLASK_SECRET_KEY=your-secret-key-here
-   ```
-
-5. **Run the application**
-   ```bash
-   python3 -m app.app
-   ```
-
-6. **Access the application**
-   ```
-   Open your browser to: http://localhost:5000
-   ```
-
-### **First Time Setup**
-1. Register a new user account
-2. Start with 1000 coins default balance
-3. Try the games or tip other users
-4. Access admin panel with password: `admin`
-
----
-
-## 📁 Project Structure
-
-```
-casino-cloud-app/
-├── app/
-│   ├── app.py              # Main Flask application
-│   ├── casino.py           # Game logic and utilities
-│   └── templates/          # HTML templates
-│       ├── base.html       # Base template with navigation
-│       ├── menu.html       # Game selection with animations
-│       ├── blackjack_*.html # Blackjack game templates
-│       ├── roulette.html   # Roulette game interface
-│       ├── slots.html      # Slots game interface
-│       ├── tip.html        # Tipping system
-│       ├── admin*.html     # Admin panel templates
-│       └── *.html          # Authentication templates
-├── scripts/
-│   └── migrate_passwords.py # Password migration utility
-├── requirements.txt        # Python dependencies
-├── .gitignore             # Git ignore rules
-├── SECURITY.md            # Security guidelines
-└── README.md              # This file
-```
-
----
-
-## 🎯 Game Rules
-
-### **Blackjack**
-- Goal: Get as close to 21 without going over
-- Face cards worth 10, Aces worth 1 or 11
-- Natural Blackjack pays 3:2
-- Double down doubles your bet for one card
-- Dealer hits on 16, stands on 17
-
-### **Roulette**
-- Red/Black: 2x payout (18/38 chance)
-- Green: 14x payout (2/38 chance)
-- Animated wheel shows result
-
-### **Slots**
-- Bet 10, 100, or 1000 coins
-- Three matching symbols for jackpot
-- Two matching symbols for smaller wins
-- Higher value symbols = bigger payouts
-
----
-
-## 🔐 Security Features
-
-- **Password hashing** using Werkzeug's secure methods
-- **Environment variable** protection for secret keys
-- **Input validation** on all user inputs
-- **Session security** with secure cookie handling
-- **Data file protection** via .gitignore
-- **Admin access control** with password authentication
-
----
-
-## 🐳 Docker Support
-
-### **Build Docker Image**
 ```bash
-docker build -t lironsaada/casino-app:latest .
+# Clone repository
+git clone https://github.com/lironsaada/casino-cloud-app.git
+cd casino-cloud-app/infra
+
+# Initialize Terraform
+terraform init
+
+# Review infrastructure plan
+terraform plan -var="resource_group_name=casino-rg" \
+               -var="location=East US" \
+               -var="aks_cluster_name=casino-aks" \
+               -var="acr_name=casinoacr$(date +%s)"
+
+# Deploy infrastructure
+terraform apply -auto-approve
 ```
 
-### **Run with Docker**
+### **2. Container Image Build & Push**
+
 ```bash
-docker run -p 5000:5000 -e FLASK_SECRET_KEY="your-secret-key" lironsaada/casino-app:latest
+# Login to Azure Container Registry
+az acr login --name <acr-name>
+
+# Build and tag image
+docker build -t <acr-name>.azurecr.io/casino-app:v1.0.0 .
+
+# Push to registry
+docker push <acr-name>.azurecr.io/casino-app:v1.0.0
 ```
 
-### **Push to Docker Hub**
+### **3. Kubernetes Deployment**
+
 ```bash
-docker push lironsaada/casino-app:latest
+# Get AKS credentials
+az aks get-credentials --resource-group casino-rg --name casino-aks
+
+# Deploy application manifests
+kubectl apply -f infra/k8s/
+
+# Verify deployment
+kubectl get pods,svc,pvc -l app=casino
+
+# Access application
+kubectl port-forward svc/casino-service 8080:80
 ```
 
 ---
 
-## 🛠 Development
+## 📊 Monitoring & Observability
 
-### **Adding New Games**
-1. Create game logic in `casino.py`
-2. Add route in `app.py`
-3. Create HTML template in `templates/`
-4. Add game card to `menu.html`
+### **Azure Monitor Integration**
+```bash
+# Enable Container Insights
+az aks enable-addons --resource-group casino-rg \
+                     --name casino-aks \
+                     --addons monitoring
 
-### **Customizing UI**
-- Modify CSS variables in `base.html`
-- Update color scheme in the `:root` section
-- Add animations in individual templates
-
-### **Database Migration**
-- Users stored in `users.json`
-- Balance history in `balance_history.json`
-- Use `scripts/migrate_passwords.py` for password updates
-
----
-
-## 📊 Admin Features
-
-Access the admin panel at `/admin_auth` with password: `admin`
-
-**Available Actions:**
-- View all user accounts and balances
-- Add/subtract coins from user accounts
-- Set specific balance amounts
-- Monitor total platform statistics
-- Quick action forms for efficiency
-
----
-
-## 🎨 Customization
-
-### **Color Scheme**
-The app uses CSS custom properties for easy theming:
-```css
---dark-blue: #1a237e
---primary-gold: #ffd700
---accent-purple: #6b46c1
+# View logs
+az monitor log-analytics query \
+  --workspace <workspace-id> \
+  --analytics-query "ContainerLog | where Name contains 'casino'"
 ```
 
-### **Game Settings**
-- Default starting balance: 1000 coins
-- Blackjack natural payout: 3:2
-- Roulette green payout: 14x
-- Admin password: "admin"
+### **Kubernetes Metrics**
+```bash
+# Pod resource usage
+kubectl top pods
+
+# Node resource usage  
+kubectl top nodes
+
+# Horizontal Pod Autoscaler status
+kubectl get hpa
+```
 
 ---
 
-## 🤝 Contributing
+## 🔄 CI/CD Pipeline
 
-1. Fork the repository
-2. Create a feature branch
-3. Make your changes
-4. Test thoroughly
-5. Submit a pull request
+### **GitHub Actions Workflow** (`.github/workflows/deploy.yml`)
+
+```yaml
+name: Casino App CI/CD
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+jobs:
+  security-scan:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Run Trivy vulnerability scanner
+        uses: aquasecurity/trivy-action@master
+        with:
+          scan-type: 'fs'
+          scan-ref: '.'
+
+  build:
+    needs: security-scan
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      
+      - name: Login to ACR
+        uses: azure/docker-login@v1
+        with:
+          login-server: ${{ secrets.ACR_LOGIN_SERVER }}
+          username: ${{ secrets.ACR_USERNAME }}
+          password: ${{ secrets.ACR_PASSWORD }}
+      
+      - name: Build and push
+        run: |
+          IMAGE_TAG=${{ github.sha }}
+          docker build -t ${{ secrets.ACR_LOGIN_SERVER }}/casino-app:${IMAGE_TAG} .
+          docker push ${{ secrets.ACR_LOGIN_SERVER }}/casino-app:${IMAGE_TAG}
+
+  deploy:
+    needs: build
+    runs-on: ubuntu-latest
+    environment: production
+    steps:
+      - uses: actions/checkout@v4
+      
+      - name: Azure Login
+        uses: azure/login@v1
+        with:
+          creds: ${{ secrets.AZURE_CREDENTIALS }}
+      
+      - name: Get AKS credentials
+        run: |
+          az aks get-credentials --resource-group ${{ secrets.RESOURCE_GROUP }} \
+                                --name ${{ secrets.AKS_CLUSTER_NAME }}
+      
+      - name: Deploy to AKS
+        uses: azure/k8s-deploy@v1
+        with:
+          manifests: |
+            infra/k8s/deployment.yaml
+            infra/k8s/service.yaml
+            infra/k8s/configmap.yaml
+          images: |
+            ${{ secrets.ACR_LOGIN_SERVER }}/casino-app:${{ github.sha }}
+```
 
 ---
 
-## 📝 License
+## 🔐 Security Implementation
 
-This project is developed by **Liron Saada**. All rights reserved.
+### **Container Security**
+- **Multi-stage Docker builds** for minimal attack surface
+- **Non-root user** execution in containers
+- **Vulnerability scanning** with Trivy in CI pipeline
+- **Base image pinning** with digest verification
 
----
+### **Kubernetes Security**
+- **RBAC policies** for service account permissions
+- **Network policies** for pod-to-pod communication
+- **Pod Security Standards** enforcement
+- **Secrets management** via Kubernetes secrets + Azure Key Vault
 
-## 👨‍💻 Developer
-
-**Liron Saada**
-- 🎯 Full-stack developer specializing in Python/Flask
-- 🎨 UI/UX design with focus on user experience
-- 🔒 Security-conscious development practices
-- 🎰 Passionate about creating engaging web applications
-
----
-
-## 🎉 Acknowledgments
-
-- **Flask** community for the excellent web framework
-- **Bootstrap** team for responsive design components
-- **Font Awesome** for beautiful icons
-- **Casino gaming** industry for inspiration
+### **Infrastructure Security**
+- **Private AKS cluster** with authorized IP ranges
+- **Azure Container Registry** with admin user disabled
+- **Managed identity** for AKS-to-ACR authentication
+- **Terraform state** stored in encrypted Azure Storage
 
 ---
 
-*Built with ❤️ using Flask & Bootstrap*
+## 📈 Scaling & Performance
 
-**© 2025 Casino Cloud App | Developed by Liron Saada**
+### **Horizontal Pod Autoscaler (HPA)**
+```yaml
+apiVersion: autoscaling/v2
+kind: HorizontalPodAutoscaler
+metadata:
+  name: casino-app-hpa
+spec:
+  scaleTargetRef:
+    apiVersion: apps/v1
+    kind: Deployment
+    name: casino-app
+  minReplicas: 2
+  maxReplicas: 20
+  metrics:
+  - type: Resource
+    resource:
+      name: cpu
+      target:
+        type: Utilization
+        averageUtilization: 70
+  - type: Resource
+    resource:
+      name: memory
+      target:
+        type: Utilization
+        averageUtilization: 80
+```
+
+### **Cluster Autoscaler**
+```bash
+# Enable cluster autoscaler
+az aks update --resource-group casino-rg \
+              --name casino-aks \
+              --enable-cluster-autoscaler \
+              --min-count 1 \
+              --max-count 10
+```
+
+---
+
+## 🗂 Infrastructure as Code
+
+### **Terraform Modules Structure**
+```
+infra/
+├── main.tf                 # Main infrastructure resources
+├── variables.tf            # Input variables
+├── outputs.tf             # Output values
+├── provider.tf            # Azure provider configuration
+├── terraform.tfvars.example
+└── modules/
+    ├── aks/               # AKS cluster module
+    ├── acr/               # Container registry module
+    └── monitoring/        # Log Analytics module
+```
+
+### **Key Resources Provisioned**
+- **Resource Group**: Logical container for all resources
+- **AKS Cluster**: Managed Kubernetes with system-assigned identity
+- **Container Registry**: Private registry with admin access
+- **Log Analytics**: Centralized logging and monitoring
+- **Virtual Network**: Network isolation and security groups
+
+---
+
+## 🔧 Operational Tasks
+
+### **Scaling Operations**
+```bash
+# Manual pod scaling
+kubectl scale deployment casino-app --replicas=5
+
+# Check autoscaler status
+kubectl describe hpa casino-app-hpa
+
+# Node pool scaling
+az aks nodepool scale --resource-group casino-rg \
+                      --cluster-name casino-aks \
+                      --name agentpool \
+                      --node-count 3
+```
+
+### **Troubleshooting**
+```bash
+# Pod logs
+kubectl logs -f deployment/casino-app
+
+# Pod shell access
+kubectl exec -it <pod-name> -- /bin/bash
+
+# Cluster events
+kubectl get events --sort-by=.metadata.creationTimestamp
+
+# Resource usage
+kubectl describe node <node-name>
+```
+
+### **Backup & Recovery**
+```bash
+# Backup persistent volumes
+kubectl get pvc
+velero backup create casino-backup --include-namespaces default
+
+# Restore from backup
+velero restore create --from-backup casino-backup
+```
+
+---
+
+## 📊 Cost Optimization
+
+### **Resource Right-sizing**
+- **Pod resource requests/limits** tuned for optimal allocation
+- **Node instance types** selected based on workload characteristics
+- **Spot instances** for development environments
+- **Auto-shutdown** schedules for non-production clusters
+
+### **Monitoring Costs**
+```bash
+# Azure cost analysis
+az consumption usage list --billing-period-name <period>
+
+# Resource utilization
+kubectl top pods --containers
+kubectl top nodes
+```
+
+---
+
+## 🔄 GitOps Workflow
+
+### **Branch Strategy**
+```
+main          ──────●──────●──────●
+              ↗      ↗      ↗
+develop   ────●──────●──────●
+          ↗   ↗      ↗
+feature   ●   ●      ●
+```
+
+### **Environment Promotion**
+1. **Development**: Auto-deploy from `develop` branch
+2. **Staging**: Manual promotion with integration tests
+3. **Production**: Tagged releases with approval gates
+
+---
+
+## 🎯 DevOps Metrics
+
+### **DORA Metrics Implementation**
+- **Deployment Frequency**: GitHub Actions pipeline metrics
+- **Lead Time**: PR creation to production deployment
+- **MTTR**: Alert-to-resolution time via Azure Monitor
+- **Change Failure Rate**: Rollback frequency tracking
+
+### **SLO/SLI Targets**
+- **Availability**: 99.9% uptime (43 minutes/month downtime)
+- **Latency**: P95 < 500ms for game actions
+- **Error Rate**: < 0.1% of requests result in 5xx errors
+- **Throughput**: Support 1000+ concurrent users
+
+---
+
+## 🚨 Disaster Recovery
+
+### **Backup Strategy**
+- **Automated snapshots** of persistent volumes
+- **Cross-region replication** of container images
+- **Infrastructure state backup** via Terraform state management
+- **Application data backup** to Azure Blob Storage
+
+### **Recovery Procedures**
+```bash
+# Infrastructure recovery
+terraform apply -auto-approve
+
+# Application recovery
+kubectl apply -f infra/k8s/
+
+# Data recovery
+velero restore create --from-backup <backup-name>
+```
+
+---
+
+## 👨‍💻 DevOps Engineer: Liron Saada
+
+### **Expertise Demonstrated**
+- **☁️ Cloud Architecture**: Multi-service Azure infrastructure design
+- **🐳 Containerization**: Docker best practices and optimization
+- **☸️ Kubernetes**: Production workload orchestration
+- **🏗️ Infrastructure as Code**: Terraform automation and modules
+- **🔄 CI/CD**: GitHub Actions pipeline engineering
+- **📊 Monitoring**: Observability and alerting implementation
+- **🔐 Security**: Container and cluster security hardening
+
+### **DevOps Practices Implemented**
+- Infrastructure as Code (IaC)
+- Continuous Integration/Continuous Deployment
+- Container Security Scanning
+- Automated Testing and Quality Gates
+- Monitoring and Alerting
+- Disaster Recovery Planning
+- Cost Optimization
+
+---
+
+**© 2025 Casino Cloud App | DevOps Engineering by Liron Saada**
+
+*Built with enterprise-grade DevOps practices for production scalability*
