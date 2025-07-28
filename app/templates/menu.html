@@ -25,81 +25,92 @@
         <div class="row g-4 justify-content-center">
             <!-- Blackjack Card -->
             <div class="col-lg-4 col-md-6">
-                <a href="{{ url_for('blackjack_bet') }}" class="game-link">
+            <a href="{{ url_for('blackjack_bet') }}" class="game-link">
                     <div class="game-card blackjack-card">
                         <div class="card-header">
-                            <div class="game-icon">
-                                <i class="fas fa-spade"></i>
+                            <div class="game-icon blackjack-cards">
+                                <div class="card ace-card">
+                                    <span class="card-corner">A</span>
+                                    <span class="card-center">A</span>
+                                </div>
+                                <div class="card ten-card">
+                                    <span class="card-corner">10</span>
+                                    <span class="card-center">10</span>
+                                </div>
                             </div>
                         </div>
-                        <div class="card-body">
+                    <div class="card-body">
                             <h3 class="game-title">Blackjack</h3>
                             <p class="game-description">Beat the dealer by getting as close to 21 as possible without going over</p>
                             <div class="game-features">
-                                <span class="feature"><i class="fas fa-star"></i> 3:2 Blackjack Payout</span>
-                                <span class="feature"><i class="fas fa-hand-paper"></i> Double Down</span>
-                                <span class="feature"><i class="fas fa-chart-line"></i> Low House Edge</span>
+                                <span class="feature"><i class="fas fa-coins"></i> 3:2 Blackjack Payout</span>
+                                <span class="feature"><i class="fas fa-hand-scissors"></i> Double Down</span>
+                                <span class="feature"><i class="fas fa-percentage"></i> Low House Edge</span>
                             </div>
                         </div>
                         <div class="card-footer">
                             <div class="play-button">
-                                <i class="fas fa-play"></i>
+                                <i class="fas fa-play-circle"></i>
                                 <span>Play Now</span>
                             </div>
                         </div>
-                    </div>
-                </a>
-            </div>
+                </div>
+            </a>
+        </div>
 
             <!-- Roulette Card -->
             <div class="col-lg-4 col-md-6">
-                <a href="{{ url_for('roulette') }}" class="game-link">
+            <a href="{{ url_for('roulette') }}" class="game-link">
                     <div class="game-card roulette-card">
                         <div class="card-header">
-                            <div class="game-icon">
-                                <i class="fas fa-dot-circle"></i>
+                            <div class="game-icon roulette-wheel">
+                                <div class="wheel-outer">
+                                    <div class="wheel-inner">
+                                        <div class="wheel-center"></div>
+                                    </div>
+                                </div>
                             </div>
                         </div>
-                        <div class="card-body">
+                    <div class="card-body">
                             <h3 class="game-title">Roulette</h3>
                             <p class="game-description">Place your bet on red, black, or green and watch the wheel spin</p>
                             <div class="game-features">
                                 <span class="feature"><i class="fas fa-gem"></i> 14x Green Payout</span>
-                                <span class="feature"><i class="fas fa-balance-scale"></i> 2x Red/Black</span>
-                                <span class="feature"><i class="fas fa-magic"></i> Smooth Animation</span>
+                                <span class="feature"><i class="fas fa-equals"></i> 2x Red/Black</span>
+                                <span class="feature"><i class="fas fa-sync-alt"></i> Smooth Animation</span>
                             </div>
                         </div>
                         <div class="card-footer">
                             <div class="play-button">
-                                <i class="fas fa-play"></i>
+                                <i class="fas fa-play-circle"></i>
                                 <span>Spin Now</span>
                             </div>
                         </div>
-                    </div>
-                </a>
-            </div>
+                </div>
+            </a>
+        </div>
 
             <!-- Slots Card -->
             <div class="col-lg-4 col-md-6">
-                <a href="{{ url_for('slots') }}" class="game-link">
+            <a href="{{ url_for('slots') }}" class="game-link">
                     <div class="game-card slots-card">
                         <div class="card-header">
-                            <div class="game-icon">
-                                7
+                            <div class="game-icon slots-777">
+                                777
                             </div>
                         </div>
-                        <div class="card-body">
+                    <div class="card-body">
                             <h3 class="game-title">Slots</h3>
                             <p class="game-description">Spin the reels and match symbols for massive winning combinations</p>
                             <div class="game-features">
-                                <span class="feature"><i class="fas fa-trophy"></i> 25x Jackpot</span>
-                                <span class="feature"><i class="fas fa-coins"></i> Multiple Bet Sizes</span>
-                                <span class="feature"><i class="fas fa-rocket"></i> Instant Results</span>
+                                <span class="feature"><i class="fas fa-crown"></i> 25x Jackpot</span>
+                                <span class="feature"><i class="fas fa-layer-group"></i> Multiple Bet Sizes</span>
+                                <span class="feature"><i class="fas fa-bolt"></i> Instant Results</span>
                             </div>
                         </div>
                         <div class="card-footer">
                             <div class="play-button">
-                                <i class="fas fa-play"></i>
+                                <i class="fas fa-play-circle"></i>
                                 <span>Spin Reels</span>
                             </div>
                         </div>
@@ -113,22 +124,16 @@
     <div class="quick-actions mt-5">
         <div class="row g-3 justify-content-center">
             <div class="col-auto">
-                <a href="{{ url_for('check_balance') }}" class="quick-action-btn">
-                    <i class="fas fa-wallet"></i>
-                    <span>Check Balance</span>
-                </a>
-            </div>
-            <div class="col-auto">
                 <a href="{{ url_for('tip') }}" class="quick-action-btn">
-                    <i class="fas fa-gift"></i>
+                    <i class="fas fa-hand-holding-usd"></i>
                     <span>Send Tip</span>
                 </a>
-            </div>
+                </div>
             <div class="col-auto">
                 <a href="{{ url_for('admin_auth') }}" class="quick-action-btn admin-btn">
-                    <i class="fas fa-crown"></i>
+                    <i class="fas fa-user-shield"></i>
                     <span>Admin Panel</span>
-                </a>
+            </a>
             </div>
         </div>
     </div>
@@ -284,6 +289,190 @@
     .game-card:hover .game-icon {
         transform: scale(1.1) rotate(5deg);
         box-shadow: 0 15px 40px rgba(255, 215, 0, 0.4);
+    }
+
+
+
+    /* Custom roulette wheel */
+    .roulette-wheel {
+        display: flex !important;
+        align-items: center !important;
+        justify-content: center !important;
+        font-size: inherit !important;
+    }
+
+    .wheel-outer {
+        width: 60px;
+        height: 60px;
+        border-radius: 50%;
+        background: linear-gradient(45deg, #8B4513 0%, #A0522D 25%, #8B4513 50%, #A0522D 75%, #8B4513 100%);
+        border: 3px solid #2F1B14;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        position: relative;
+    }
+
+    .wheel-outer::before {
+        content: '';
+        position: absolute;
+        width: 100%;
+        height: 100%;
+        border-radius: 50%;
+        background: conic-gradient(
+            #dc2626 0deg 12deg,
+            #1f2937 12deg 24deg,
+            #dc2626 24deg 36deg,
+            #1f2937 36deg 48deg,
+            #dc2626 48deg 60deg,
+            #1f2937 60deg 72deg,
+            #dc2626 72deg 84deg,
+            #1f2937 84deg 96deg,
+            #dc2626 96deg 108deg,
+            #1f2937 108deg 120deg,
+            #dc2626 120deg 132deg,
+            #1f2937 132deg 144deg,
+            #dc2626 144deg 156deg,
+            #1f2937 156deg 168deg,
+            #dc2626 168deg 180deg,
+            #1f2937 180deg 192deg,
+            #dc2626 192deg 204deg,
+            #1f2937 204deg 216deg,
+            #dc2626 216deg 228deg,
+            #1f2937 228deg 240deg,
+            #dc2626 240deg 252deg,
+            #1f2937 252deg 264deg,
+            #dc2626 264deg 276deg,
+            #1f2937 276deg 288deg,
+            #dc2626 288deg 300deg,
+            #1f2937 300deg 312deg,
+            #dc2626 312deg 324deg,
+            #1f2937 324deg 336deg,
+            #dc2626 336deg 348deg,
+            #1f2937 348deg 360deg
+        );
+        border-radius: 50%;
+    }
+
+    .wheel-inner {
+        width: 45px;
+        height: 45px;
+        border-radius: 50%;
+        background: linear-gradient(135deg, #1a1a1a 0%, #2a2a2a 100%);
+        border: 2px solid #333;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        z-index: 2;
+        position: relative;
+    }
+
+    .wheel-center {
+        width: 8px;
+        height: 8px;
+        border-radius: 50%;
+        background: linear-gradient(135deg, var(--primary-gold) 0%, var(--secondary-gold) 100%);
+        box-shadow: 0 0 8px rgba(255, 215, 0, 0.6);
+    }
+
+    .roulette-card:hover .wheel-outer::before {
+        animation: rouletteRotate 3s linear infinite;
+    }
+
+    @keyframes rouletteRotate {
+        from { transform: rotate(0deg); }
+        to { transform: rotate(360deg); }
+    }
+
+    /* Custom blackjack cards */
+    .blackjack-cards {
+        display: flex !important;
+        align-items: center !important;
+        justify-content: center !important;
+        position: relative !important;
+        width: 60px !important;
+        height: 60px !important;
+    }
+
+    .blackjack-cards .card {
+        position: absolute;
+        width: 42px;
+        height: 58px;
+        background: white;
+        border-radius: 6px;
+        border: 2px solid #333;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        transition: all 0.4s ease;
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+    }
+
+    .card-corner {
+        position: absolute;
+        top: 3px;
+        left: 3px;
+        font-size: 0.7rem;
+        font-weight: 700;
+        line-height: 1;
+    }
+
+    .card-center {
+        font-size: 1.4rem;
+        font-weight: 900;
+        opacity: 0.3;
+    }
+
+    .ace-card {
+        z-index: 2;
+        transform: translateX(0) rotate(0deg);
+    }
+
+    .ace-card .card-corner,
+    .ace-card .card-center {
+        color: #dc2626; /* Red for hearts/diamonds */
+    }
+
+    .ten-card {
+        z-index: 1;
+        transform: translateX(-30px) rotate(-15deg) scale(0.9);
+        opacity: 0;
+    }
+
+    .ten-card .card-corner,
+    .ten-card .card-center {
+        color: #1f2937; /* Black for spades/clubs */
+    }
+
+    .ten-card .card-corner {
+        font-size: 0.6rem; /* Smaller for "10" in corner */
+    }
+
+    .blackjack-card:hover .ace-card {
+        transform: translateX(8px) rotate(5deg);
+    }
+
+    .blackjack-card:hover .ten-card {
+        transform: translateX(-8px) rotate(-5deg) scale(0.95);
+        opacity: 1;
+    }
+
+    /* Simple 777 spinning icon */
+    .slots-777 {
+        font-size: 2.5rem !important;
+        font-weight: 900 !important;
+        color: var(--dark-blue) !important;
+        transition: transform 0.4s ease !important;
+    }
+
+    .slots-card:hover .slots-777 {
+        animation: spin777 0.8s ease-in-out;
+    }
+
+    @keyframes spin777 {
+        0% { transform: rotate(0deg) scale(1); }
+        50% { transform: rotate(180deg) scale(1.1); }
+        100% { transform: rotate(360deg) scale(1); }
     }
 
 

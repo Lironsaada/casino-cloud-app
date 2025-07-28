@@ -86,12 +86,7 @@
             position: relative;
         }
 
-        .navbar-brand::after {
-            content: '🎰';
-            margin-left: 10px;
-            -webkit-text-fill-color: var(--primary-gold);
-            animation: pulse 2s infinite;
-        }
+
 
         @keyframes pulse {
             0%, 100% { transform: scale(1); }
@@ -332,6 +327,39 @@
             100% { transform: rotate(360deg); }
         }
 
+        /* Footer styling */
+        .footer {
+            background: linear-gradient(135deg, var(--dark-blue) 0%, var(--dark-blue-tint) 100%);
+            border-top: 2px solid var(--primary-gold);
+            padding: 2rem 0;
+            margin-top: auto;
+            text-align: center;
+            box-shadow: 0 -5px 20px rgba(0, 0, 0, 0.3);
+        }
+
+        .footer-content {
+            color: var(--light-gray);
+        }
+
+        .footer-content p {
+            margin: 0.5rem 0;
+            font-size: 1rem;
+            font-weight: 500;
+        }
+
+        .footer-content p:first-child {
+            color: var(--primary-gold);
+            font-weight: 700;
+            font-size: 1.1rem;
+            text-shadow: 0 0 10px rgba(255, 215, 0, 0.3);
+        }
+
+        .footer-tagline {
+            font-size: 0.9rem !important;
+            opacity: 0.8;
+            font-style: italic;
+        }
+
         /* Responsive design */
         @media (max-width: 768px) {
             .navbar-brand {
@@ -378,7 +406,6 @@
                 <ul class="navbar-nav ms-auto">
                     {% if 'username' in session %}
                         <li class="nav-item"><a class="nav-link" href="{{ url_for('menu') }}">Games</a></li>
-                        <li class="nav-item"><a class="nav-link" href="{{ url_for('check_balance') }}">Balance</a></li>
                         <li class="nav-item"><a class="nav-link" href="{{ url_for('tip') }}">Tip</a></li>
                         {% if session.get('admin_authenticated') %}
                             <li class="nav-item"><a class="nav-link" href="{{ url_for('admin') }}">Admin Panel</a></li>
@@ -413,7 +440,10 @@
 
     <footer class="footer">
         <div class="container">
-            <p>&copy; 2025 Casino Cloud App | Built with ❤️ and Flask</p>
+            <div class="footer-content">
+                <p>&copy; 2025 Casino Cloud App | Developed by Liron Saada</p>
+                <p class="footer-tagline">Built with ❤️ using Flask & Bootstrap</p>
+            </div>
         </div>
     </footer>
 

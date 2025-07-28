@@ -129,7 +129,7 @@ def tip():
         return redirect(url_for("login"))
 
     if request.method == "POST":
-        to_username = request.form.get("to_user", "").strip()
+        to_username = request.form.get("username", "").strip()
         amount = request.form.get("amount", "0").strip()
         
         to_user = next((u for u in users if u["username"] == to_username), None)
@@ -154,9 +154,14 @@ def tip():
         user["balance"] -= amount
         to_user["balance"] += amount
         save_users()
+        
+        # Log the transactions
+        log_transaction(user["username"], "tip_sent", -amount, f"Tip sent to {to_username}", "sent")
+        log_transaction(to_user["username"], "tip_received", amount, f"Tip received from {user['username']}", "received")
+        
         flash(f"Tipped {amount} coins to {to_username}")
         return redirect(url_for("menu"))
-    return render_template("tip.html")
+    return render_template("tip.html", balance=user["balance"])
 
 @app.route("/admin_auth", methods=["GET", "POST"])
 def admin_auth():
@@ -397,6 +402,15 @@ def blackjack_bet():
 
         user["balance"] = balance + winnings
         save_users()
+        
+        # Log the transaction
+        transaction_result = "won" if winnings > bet else "lost" if winnings == 0 else "push"
+        net_amount = winnings - bet  # Net gain/loss
+        details = f"Blackjack bet: {bet} coins"
+        if player_blackjack and not dealer_blackjack:
+            details += " (Natural Blackjack)"
+        log_transaction(user["username"], "blackjack", net_amount, details, transaction_result)
+        
         session.pop("blackjack")  # Clear game session
 
         return render_template("blackjack_result.html",
@@ -472,8 +486,10 @@ def roulette():
         save_users()
         
         # Log the transaction
-        log_transaction(user["username"], "roulette", -bet_amount if not win else winnings - bet_amount, 
-                       f"Roulette bet on {bet_color}, landed on {winning_color}", result)
+        transaction_result = "won" if win else "lost"
+        net_amount = winnings - bet_amount if win else -bet_amount
+        log_transaction(user["username"], "roulette", net_amount, 
+                       f"Roulette bet on {bet_color}: {bet_amount} coins", transaction_result)
 
         # Return JSON for AJAX requests
         if request.is_json:
@@ -553,8 +569,10 @@ def slots():
         save_users()
         
         # Log the transaction
-        log_transaction(user["username"], "slots", -bet_amount if not win else winnings - bet_amount, 
-                       f"Slots game: {a} {b} {c}", message)
+        transaction_result = "won" if win else "lost"
+        net_amount = winnings - bet_amount if win else -bet_amount
+        log_transaction(user["username"], "slots", net_amount, 
+                       f"Slots bet: {bet_amount} coins", transaction_result)
 
         # Return JSON for AJAX requests
         if request.is_json:
