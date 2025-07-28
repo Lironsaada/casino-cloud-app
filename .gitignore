@@ -37,3 +37,36 @@ logs/
 # Temporary files
 tmp/
 temp/
+
+# Sensitive data and credentials
+.env
+.env.local
+.env.*.local
+*.key
+*.pem
+id_rsa*
+*.p12
+*.pfx
+*.crt
+*.csr
+
+# User data directories
+app/.users/
+data/users.json
+data/balance_history.json
+
+# Local development files
+.vscode/settings.json
+.idea/
+*.swp
+*.swo
+*~
+
+# OS generated files
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db

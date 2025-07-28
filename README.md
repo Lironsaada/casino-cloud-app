@@ -134,14 +134,14 @@ Deploy Prometheus and Grafana locally using Docker Compose:
 docker-compose up -d
 
 # Access the services
-# Grafana:    http://localhost:3000 (admin/casino123)
+# Grafana:    http://localhost:3000 (admin/[see SECURITY.md for password setup])
 # Prometheus: http://localhost:9090
 # App:        http://localhost:5000
 ```
 
 **Grafana Dashboard Access:**
 1. Open http://localhost:3000
-2. Login: `admin` / `casino123`
+2. Login: `admin` / `[set GRAFANA_ADMIN_PASSWORD environment variable]`
 3. Navigate to "Casino Cloud App - Monitoring Dashboard"
 4. Play some games to see real-time metrics!
 
@@ -173,7 +173,7 @@ kubectl get pods -n monitoring
 
 # Access Grafana via port-forward
 kubectl port-forward -n monitoring svc/grafana-service 3000:3000
-# Open: http://localhost:3000 (admin/casino123)
+# Open: http://localhost:3000 (admin/[set GRAFANA_ADMIN_PASSWORD env var])
 
 # Access Prometheus via port-forward
 kubectl port-forward -n monitoring svc/prometheus-service 9090:9090
