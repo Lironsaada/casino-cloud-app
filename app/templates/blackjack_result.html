@@ -13,18 +13,35 @@
                     <p class="lead text-light-gray">Final Balance: <strong class="text-primary-gold">{{ balance }} coins</strong></p>
                 </div>
 
-                <div class="row">
-                    <!-- Player's Final Hand -->
-                    <div class="col-md-6 mb-4">
-                        <h4 class="hand-title">Your Hand ({{ player_val }})</h4>
-                        <div class="playing-cards-container">
-                            {% for card in player_hand %}
-                                <div class="card-display">{{ card }}</div>
-                            {% endfor %}
-                        </div>
+                <div class="hands-display">
+                    <!-- Player's Final Hand(s) -->
+                    <div class="player-hands-section mb-4">
+                        {% if is_split %}
+                            <h4 class="hand-title">Your Split Hands</h4>
+                            <div class="split-hands-result">
+                                {% for i in range(player_hands|length) %}
+                                    <div class="split-hand-result">
+                                        <h5 class="split-hand-label">Hand {{ i + 1 }} ({{ hand_values[i] }}) - Bet: {{ split_bets[i] }}</h5>
+                                        <div class="playing-cards-container">
+                                            {% for card in player_hands[i] %}
+                                                <div class="card-display">{{ card }}</div>
+                                            {% endfor %}
+                                        </div>
+                                    </div>
+                                {% endfor %}
+                            </div>
+                        {% else %}
+                            <h4 class="hand-title">Your Hand ({{ player_val }})</h4>
+                            <div class="playing-cards-container">
+                                {% for card in player_hand %}
+                                    <div class="card-display">{{ card }}</div>
+                                {% endfor %}
+                            </div>
+                        {% endif %}
                     </div>
+                    
                     <!-- Dealer's Final Hand -->
-                    <div class="col-md-6 mb-4">
+                    <div class="dealer-hand-section mb-4">
                         <h4 class="hand-title">Dealer's Hand ({{ dealer_val }})</h4>
                         <div class="playing-cards-container">
                              {% for card in dealer_hand %}
@@ -73,13 +90,63 @@
         font-weight: 700;
         box-shadow: 0 4px 10px rgba(0,0,0,0.2);
     }
-    .hand-group {
+    .hands-display {
         display: flex;
-        gap: 10px;
-        margin-bottom: 10px;
-        padding: 10px;
-        border: 1px solid #4a5568;
-        border-radius: 12px;
+        flex-direction: column;
+        gap: 30px;
+        margin: 20px 0;
+    }
+    
+    .split-hands-result {
+        display: flex;
+        justify-content: center;
+        gap: 30px;
+        flex-wrap: wrap;
+    }
+    
+    .split-hand-result {
+        border: 2px solid rgba(255, 215, 0, 0.3);
+        border-radius: 15px;
+        padding: 20px;
+        background: rgba(0, 0, 0, 0.3);
+        min-width: 250px;
+        transition: all 0.3s ease;
+    }
+    
+    .split-hand-result:hover {
+        border-color: var(--primary-gold);
+        background: rgba(255, 215, 0, 0.1);
+        box-shadow: 0 0 20px rgba(255, 215, 0, 0.3);
+    }
+    
+    .split-hand-label {
+        color: var(--primary-gold);
+        font-size: 1rem;
+        text-align: center;
+        margin-bottom: 15px;
+        font-weight: 600;
+    }
+    
+    .player-hands-section, .dealer-hand-section {
+        text-align: center;
+    }
+    
+    .dealer-hand-section {
+        border-top: 1px solid rgba(255, 215, 0, 0.3);
+        padding-top: 20px;
+    }
+    
+    @media (max-width: 768px) {
+        .split-hands-result {
+            flex-direction: column;
+            align-items: center;
+        }
+        
+        .split-hand-result {
+            min-width: auto;
+            width: 100%;
+            max-width: 300px;
+        }
     }
 </style>
 {% endblock %}

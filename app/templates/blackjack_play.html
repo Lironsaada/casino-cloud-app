@@ -33,15 +33,35 @@
         {% endif %}
     </div>
 
-    <!-- Player's Hand -->
+    <!-- Player's Hand(s) -->
     <div class="mb-5">
-        <h3 class="text-center hand-title">Your Hand</h3>
-        <div class="playing-cards-container">
-            {% for card in player_hand %}
-                <div class="card-display">{{ card }}</div>
-            {% endfor %}
-        </div>
-        <p class="text-center hand-value">Value: {{ player_value }}</p>
+        {% if is_split %}
+            <h3 class="text-center hand-title">Your Hands (Split)</h3>
+            <div class="split-hands-container">
+                {% for i in range(player_hands|length) %}
+                    <div class="split-hand {% if i == current_hand %}active-hand{% endif %}">
+                        <h4 class="split-hand-title">Hand {{ i + 1 }} 
+                            {% if i == current_hand %}(Playing){% endif %}
+                            <span class="bet-amount">Bet: {{ split_bets[i] }}</span>
+                        </h4>
+                        <div class="playing-cards-container">
+                            {% for card in player_hands[i] %}
+                                <div class="card-display">{{ card }}</div>
+                            {% endfor %}
+                        </div>
+                        <p class="text-center hand-value">Value: {{ hand_values[i] if hand_values else 0 }}</p>
+                    </div>
+                {% endfor %}
+            </div>
+        {% else %}
+            <h3 class="text-center hand-title">Your Hand</h3>
+            <div class="playing-cards-container">
+                {% for card in player_hand %}
+                    <div class="card-display">{{ card }}</div>
+                {% endfor %}
+            </div>
+            <p class="text-center hand-value">Value: {{ player_value }}</p>
+        {% endif %}
     </div>
 
     <!-- Action Buttons -->
@@ -61,7 +81,7 @@
                 </button>
                 {% endif %}
                 
-                {% if player_hand|length == 2 and player_hand[0][:-1] == player_hand[1][:-1] and balance >= bj['bet'] %}
+                {% if not is_split and player_hand|length == 2 and player_hand[0][:-1] == player_hand[1][:-1] and balance >= bj['bet'] %}
                 <button type="submit" name="action" value="split" class="btn btn-lg btn-info">
                     <i class="fas fa-cut"></i> Split
                 </button>
@@ -121,6 +141,42 @@
         color: var(--primary-gold);
         font-size: 3rem;
         font-weight: bold;
+    }
+    .split-hands-container {
+        display: flex;
+        justify-content: center;
+        gap: 40px;
+        flex-wrap: wrap;
+    }
+    .split-hand {
+        border: 2px solid transparent;
+        border-radius: 15px;
+        padding: 20px;
+        background: rgba(0, 0, 0, 0.3);
+        transition: all 0.3s ease;
+    }
+    .split-hand.active-hand {
+        border-color: var(--primary-gold);
+        background: rgba(255, 215, 0, 0.1);
+        box-shadow: 0 0 20px rgba(255, 215, 0, 0.3);
+    }
+    .split-hand-title {
+        color: var(--light-gray);
+        font-size: 1rem;
+        text-align: center;
+        margin-bottom: 15px;
+    }
+    .split-hand.active-hand .split-hand-title {
+        color: var(--primary-gold);
+        font-weight: 600;
+    }
+    .bet-amount {
+        font-size: 0.8rem;
+        color: var(--light-gray);
+        display: block;
+    }
+    .split-hand.active-hand .bet-amount {
+        color: var(--secondary-gold);
     }
 </style>
 {% endblock %}

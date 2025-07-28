@@ -344,35 +344,160 @@ def blackjack_bet():
 
     if bj["state"] == "playing":
         deck = bj["deck"]
-        player_hand = bj["player_hand"]
         dealer_hand = bj["dealer_hand"]
+        
+        # Handle split vs normal hands
+        is_split = "is_split" in bj and bj["is_split"]
+        if is_split:
+            # Always get a fresh copy of the current hand to avoid reference issues
+            player_hand = bj["player_hands"][bj["current_hand"]].copy()
+            print(f"DEBUG: Loading hand {bj['current_hand']}: {player_hand}")
+            print(f"DEBUG: All hands in session: {bj['player_hands']}")
+        else:
+            player_hand = bj["player_hand"]
 
         if request.method == "POST":
             action = request.form.get("action")
             if action == "hit":
-                player_hand.append(deck.pop())
+                new_card = deck.pop()
+                player_hand.append(new_card)
                 player_val = hand_value(player_hand)
+                
+                # Debug logging for hits
+                if is_split:
+                    print(f"DEBUG: Hit - Current hand {bj['current_hand']}: added {new_card}")
+                    print(f"DEBUG: Hit - Hand after hit: {player_hand}")
+                    print(f"DEBUG: Hit - All hands: {bj['player_hands']}")
+                else:
+                    print(f"DEBUG: Hit - Single hand: added {new_card}, hand: {player_hand}")
                 if player_val > 21:
-                    bj["state"] = "finished"  # Bust - automatic loss
+                    # Handle bust for split hands
+                    if is_split:
+                        bj["player_hands"][bj["current_hand"]] = player_hand.copy()
+                        print(f"DEBUG: Bust - Hand {bj['current_hand']} busted with: {player_hand}")
+                        print(f"DEBUG: Bust - All hands before transition: {bj['player_hands']}")
+                        # Move to next hand or finish
+                        if bj["current_hand"] < len(bj["player_hands"]) - 1:
+                            bj["current_hand"] += 1
+                            print(f"DEBUG: Bust - Moved to hand {bj['current_hand']}")
+                            # Update session immediately and redirect to reload the new hand
+                            bj["deck"] = deck
+                            session["blackjack"] = bj
+                            return redirect(url_for("blackjack_bet"))
+                        else:
+                            bj["state"] = "dealer_turn"
+                    else:
+                        bj["state"] = "finished"  # Bust - automatic loss
                 elif player_val == 21:
-                    bj["state"] = "dealer_turn"  # 21 - go to dealer turn
+                    # Handle 21 for split hands
+                    if is_split:
+                        bj["player_hands"][bj["current_hand"]] = player_hand.copy()
+                        print(f"DEBUG: 21 - Hand {bj['current_hand']} got 21 with: {player_hand}")
+                        # Move to next hand or go to dealer turn
+                        if bj["current_hand"] < len(bj["player_hands"]) - 1:
+                            bj["current_hand"] += 1
+                            print(f"DEBUG: 21 - Moved to hand {bj['current_hand']}")
+                            # Update session immediately and redirect to reload the new hand
+                            bj["deck"] = deck
+                            session["blackjack"] = bj
+                            return redirect(url_for("blackjack_bet"))
+                        else:
+                            bj["state"] = "dealer_turn"
+                    else:
+                        bj["state"] = "dealer_turn"  # 21 - go to dealer turn
             elif action == "stand":
-                bj["state"] = "dealer_turn"
+                if is_split:
+                    bj["player_hands"][bj["current_hand"]] = player_hand.copy()
+                    print(f"DEBUG: Stand - Hand {bj['current_hand']} stood with: {player_hand}")
+                    # Move to next hand or go to dealer turn
+                    if bj["current_hand"] < len(bj["player_hands"]) - 1:
+                        bj["current_hand"] += 1
+                        print(f"DEBUG: Stand - Moved to hand {bj['current_hand']}")
+                        # Update session immediately and redirect to reload the new hand
+                        bj["deck"] = deck
+                        session["blackjack"] = bj
+                        return redirect(url_for("blackjack_bet"))
+                    else:
+                        bj["state"] = "dealer_turn"
+                else:
+                    bj["state"] = "dealer_turn"
             elif action == "double":
                 # Double down: double the bet, take one card, then stand
-                if len(player_hand) == 2 and user["balance"] >= bj["bet"]:
-                    user["balance"] -= bj["bet"]  # Deduct additional bet
-                    bj["bet"] *= 2  # Double the bet
+                current_bet = bj["split_bets"][bj["current_hand"]] if is_split else bj["bet"]
+                if len(player_hand) == 2 and user["balance"] >= current_bet:
+                    user["balance"] -= current_bet  # Deduct additional bet
+                    if is_split:
+                        bj["split_bets"][bj["current_hand"]] *= 2  # Double the bet for this hand
+                    else:
+                        bj["bet"] *= 2  # Double the bet
                     bj["balance"] = user["balance"]  # Update balance in session
                     player_hand.append(deck.pop())  # Take exactly one card
                     player_val = hand_value(player_hand)
-                    if player_val > 21:
-                        bj["state"] = "finished"  # Bust after double down
+                    
+                    if is_split:
+                        bj["player_hands"][bj["current_hand"]] = player_hand.copy()
+                        print(f"DEBUG: Double - Hand {bj['current_hand']} doubled with: {player_hand}")
+                        # Move to next hand or go to dealer turn
+                        if bj["current_hand"] < len(bj["player_hands"]) - 1:
+                            bj["current_hand"] += 1
+                            print(f"DEBUG: Double - Moved to hand {bj['current_hand']}")
+                            # Update session immediately and redirect to reload the new hand
+                            bj["deck"] = deck
+                            session["blackjack"] = bj
+                            return redirect(url_for("blackjack_bet"))
+                        else:
+                            bj["state"] = "dealer_turn"
                     else:
-                        bj["state"] = "dealer_turn"  # Go to dealer turn regardless of value
+                        if player_val > 21:
+                            bj["state"] = "finished"  # Bust after double down
+                        else:
+                            bj["state"] = "dealer_turn"  # Go to dealer turn regardless of value
+                    save_users()  # Save the balance change immediately
+            elif action == "split":
+                # Split: split pair into two hands, requires additional bet
+                if (not is_split and len(player_hand) == 2 and player_hand[0][:-1] == player_hand[1][:-1] 
+                    and user["balance"] >= bj["bet"]):
+                    user["balance"] -= bj["bet"]  # Deduct additional bet for second hand
+                    bj["balance"] = user["balance"]  # Update balance in session
+                    
+                    # Create two hands from the split
+                    # Ensure deck has enough cards and is properly shuffled
+                    if len(deck) < 10:  # Reshuffle if running low
+                        deck = create_deck()
+                        random.shuffle(deck)
+                    
+                    # Deal cards for split hands
+                    first_new_card = deck.pop()
+                    second_new_card = deck.pop()
+                    
+                    first_hand = [player_hand[0], first_new_card]  # First original card + new card
+                    second_hand = [player_hand[1], second_new_card]  # Second original card + new card
+                    
+                    # Debug logging
+                    print(f"DEBUG: Split - Original cards: {player_hand[0]}, {player_hand[1]}")
+                    print(f"DEBUG: Split - New cards: {first_new_card}, {second_new_card}")
+                    print(f"DEBUG: Split - First hand: {first_hand}")
+                    print(f"DEBUG: Split - Second hand: {second_hand}")
+                    print(f"DEBUG: Split - Deck remaining: {len(deck)}")
+                    
+                    # Store split hands in session (ensure they're independent lists)
+                    bj["player_hands"] = [first_hand.copy(), second_hand.copy()]  # Array of hands
+                    bj["current_hand"] = 0  # Which hand we're playing (0 or 1)
+                    bj["split_bets"] = [bj["bet"], bj["bet"]]  # Bet for each hand
+                    bj["is_split"] = True
+                    
+                    # Remove the original single hand
+                    del bj["player_hand"]
+                    
                     save_users()  # Save the balance change immediately
 
-            bj["player_hand"] = player_hand
+            # Update the appropriate hand (only if we haven't already returned)
+            if is_split:
+                bj["player_hands"][bj["current_hand"]] = player_hand.copy()  # Ensure we store a copy
+                print(f"DEBUG: Updated hand {bj['current_hand']} to: {bj['player_hands'][bj['current_hand']]}")
+                print(f"DEBUG: All hands after update: {bj['player_hands']}")
+            else:
+                bj["player_hand"] = player_hand
             bj["deck"] = deck
             session["blackjack"] = bj
             return redirect(url_for("blackjack_bet"))
@@ -395,14 +520,34 @@ def blackjack_bet():
                     return redirect(url_for("blackjack_bet"))
             
             # GET request: render game state page
-            return render_template("blackjack_play.html",
-                                   player_hand=player_hand,
-                                   dealer_hand=dealer_hand,
-                                   dealer_value=hand_value(dealer_hand),
-                                   player_value=hand_value(player_hand),
-                                   balance=bj["balance"],
-                                   bj=bj,
-                                   bj_state=bj["state"])
+            template_vars = {
+                "dealer_hand": dealer_hand,
+                "dealer_value": hand_value(dealer_hand),
+                "balance": bj["balance"],
+                "bj": bj,
+                "bj_state": bj["state"]
+            }
+            
+            # Handle split vs normal hands for template
+            if is_split:
+                hand_values = [hand_value(hand) for hand in bj["player_hands"]]
+                template_vars.update({
+                    "player_hands": bj["player_hands"],
+                    "current_hand": bj["current_hand"],
+                    "player_hand": bj["player_hands"][bj["current_hand"]],  # Current active hand
+                    "player_value": hand_value(bj["player_hands"][bj["current_hand"]]),
+                    "hand_values": hand_values,
+                    "is_split": True,
+                    "split_bets": bj["split_bets"]
+                })
+            else:
+                template_vars.update({
+                    "player_hand": player_hand,
+                    "player_value": hand_value(player_hand),
+                    "is_split": False
+                })
+            
+            return render_template("blackjack_play.html", **template_vars)
 
     if bj["state"] == "dealer_turn":
         deck = bj["deck"]
@@ -417,51 +562,105 @@ def blackjack_bet():
         return redirect(url_for("blackjack_bet"))
 
     if bj["state"] == "finished":
-        player_hand = bj["player_hand"]
         dealer_hand = bj["dealer_hand"]
-        bet = bj["bet"]
-        balance = bj["balance"]
-
-        player_val = hand_value(player_hand)
         dealer_val = hand_value(dealer_hand)
-        result = ""
-        winnings = 0
-
-        # Check for natural blackjack (21 with first 2 cards)
-        player_blackjack = len(player_hand) == 2 and player_val == 21
-        dealer_blackjack = len(dealer_hand) == 2 and dealer_val == 21
-
-        if player_val > 21:
-            result = "You busted! You lose."
-            winnings = 0
-        elif player_blackjack and dealer_blackjack:
-            result = "Both have blackjack! Push - your bet is returned."
-            winnings = bet
-        elif player_blackjack and not dealer_blackjack:
-            result = f"Blackjack! You won {int(bet * 2.5)} coins."
-            winnings = int(bet * 2.5)  # 3:2 payout for blackjack
-        elif dealer_val > 21:
-            result = f"Dealer busted! You win {bet * 2} coins."
-            winnings = bet * 2
-        elif player_val > dealer_val:
-            result = f"You win! You won {bet * 2} coins."
-            winnings = bet * 2
-        elif player_val == dealer_val:
-            result = "Push. Your bet is returned."
-            winnings = bet
+        balance = bj["balance"]
+        
+        # Handle split vs normal hands
+        is_split = "is_split" in bj and bj["is_split"]
+        
+        if is_split:
+            # Handle split hands
+            results = []
+            total_winnings = 0
+            
+            for i, hand in enumerate(bj["player_hands"]):
+                hand_val = hand_value(hand)
+                bet = bj["split_bets"][i]
+                hand_result = ""
+                hand_winnings = 0
+                
+                # Check for natural blackjack (21 with first 2 cards)
+                player_blackjack = len(hand) == 2 and hand_val == 21
+                dealer_blackjack = len(dealer_hand) == 2 and dealer_val == 21
+                
+                if hand_val > 21:
+                    hand_result = f"Hand {i+1}: Busted! Lost {bet} coins."
+                    hand_winnings = 0
+                elif player_blackjack and dealer_blackjack:
+                    hand_result = f"Hand {i+1}: Both have blackjack! Push - {bet} coins returned."
+                    hand_winnings = bet
+                elif player_blackjack and not dealer_blackjack:
+                    hand_result = f"Hand {i+1}: Blackjack! Won {int(bet * 2.5)} coins."
+                    hand_winnings = int(bet * 2.5)  # 3:2 payout for blackjack
+                elif dealer_val > 21:
+                    hand_result = f"Hand {i+1}: Dealer busted! Won {bet * 2} coins."
+                    hand_winnings = bet * 2
+                elif hand_val > dealer_val:
+                    hand_result = f"Hand {i+1}: Won {bet * 2} coins."
+                    hand_winnings = bet * 2
+                elif hand_val == dealer_val:
+                    hand_result = f"Hand {i+1}: Push - {bet} coins returned."
+                    hand_winnings = bet
+                else:
+                    hand_result = f"Hand {i+1}: Lost {bet} coins."
+                    hand_winnings = 0
+                
+                results.append(hand_result)
+                total_winnings += hand_winnings
+            
+            result = " | ".join(results)
+            winnings = total_winnings
         else:
-            result = "You lose."
+            # Handle single hand (original logic)
+            player_hand = bj["player_hand"]
+            bet = bj["bet"]
+            
+            player_val = hand_value(player_hand)
+            result = ""
             winnings = 0
+
+            # Check for natural blackjack (21 with first 2 cards)
+            player_blackjack = len(player_hand) == 2 and player_val == 21
+            dealer_blackjack = len(dealer_hand) == 2 and dealer_val == 21
+
+            if player_val > 21:
+                result = "You busted! You lose."
+                winnings = 0
+            elif player_blackjack and dealer_blackjack:
+                result = "Both have blackjack! Push - your bet is returned."
+                winnings = bet
+            elif player_blackjack and not dealer_blackjack:
+                result = f"Blackjack! You won {int(bet * 2.5)} coins."
+                winnings = int(bet * 2.5)  # 3:2 payout for blackjack
+            elif dealer_val > 21:
+                result = f"Dealer busted! You win {bet * 2} coins."
+                winnings = bet * 2
+            elif player_val > dealer_val:
+                result = f"You win! You won {bet * 2} coins."
+                winnings = bet * 2
+            elif player_val == dealer_val:
+                result = "Push. Your bet is returned."
+                winnings = bet
+            else:
+                result = "You lose."
+                winnings = 0
 
         user["balance"] = balance + winnings
         save_users()
         
         # Log the transaction
-        transaction_result = "won" if winnings > bet else "lost" if winnings == 0 else "push"
-        net_amount = winnings - bet  # Net gain/loss
-        details = f"Blackjack bet: {bet} coins"
-        if player_blackjack and not dealer_blackjack:
-            details += " (Natural Blackjack)"
+        if is_split:
+            total_bet = sum(bj["split_bets"])
+            transaction_result = "won" if winnings > total_bet else "lost" if winnings == 0 else "push"
+            net_amount = winnings - total_bet  # Net gain/loss
+            details = f"Blackjack split bet: {total_bet} coins (2 hands)"
+        else:
+            transaction_result = "won" if winnings > bet else "lost" if winnings == 0 else "push"
+            net_amount = winnings - bet  # Net gain/loss
+            details = f"Blackjack bet: {bet} coins"
+            if player_blackjack and not dealer_blackjack:
+                details += " (Natural Blackjack)"
         log_transaction(user["username"], "blackjack", net_amount, details, transaction_result)
         
         # Track game metrics
@@ -469,13 +668,28 @@ def blackjack_bet():
         
         session.pop("blackjack")  # Clear game session
 
-        return render_template("blackjack_result.html",
-                               player_hand=player_hand,
-                               dealer_hand=dealer_hand,
-                               player_val=player_val,
-                               dealer_val=dealer_val,
-                               result=result,
-                               balance=user["balance"])
+        # Prepare template variables for result page
+        result_vars = {
+            "dealer_hand": dealer_hand,
+            "dealer_val": dealer_val,
+            "result": result,
+            "balance": user["balance"],
+            "is_split": is_split
+        }
+        
+        if is_split:
+            result_vars.update({
+                "player_hands": bj["player_hands"],
+                "hand_values": [hand_value(hand) for hand in bj["player_hands"]],
+                "split_bets": bj["split_bets"]
+            })
+        else:
+            result_vars.update({
+                "player_hand": player_hand,
+                "player_val": player_val
+            })
+        
+        return render_template("blackjack_result.html", **result_vars)
 
 #########################
 # Roulette implementation
@@ -587,15 +801,26 @@ def slots():
             
         try:
             bet_amount = int(bet_amount)
-            if bet_amount <= 0 or bet_amount > user["balance"]:
+            # Enhanced validation
+            if bet_amount <= 0:
+                error_msg = "Bet amount must be positive"
+            elif bet_amount > user["balance"]:
+                error_msg = "Insufficient balance"
+            elif bet_amount > 10000:  # Maximum bet limit
+                error_msg = "Bet amount exceeds maximum limit of 10,000"
+            else:
+                error_msg = None
+                
+            if error_msg:
                 if request.is_json:
-                    return {"error": "Invalid bet amount"}, 400
-                flash("Invalid bet amount")
+                    return {"error": error_msg}, 400
+                flash(error_msg)
                 return render_template("slots.html", balance=user["balance"])
         except (ValueError, TypeError):
+            error_msg = "Invalid bet amount format"
             if request.is_json:
-                return {"error": "Invalid bet amount"}, 400
-            flash("Invalid bet amount")
+                return {"error": error_msg}, 400
+            flash(error_msg)
             return render_template("slots.html", balance=user["balance"])
 
         user["balance"] -= bet_amount
