@@ -23,7 +23,7 @@ spec:
     spec:
       containers:
         - name: casino
-          image: lironsaada/casino-app:latest
+          image: lironsaada/casino-cloud-app:latest
           ports:
             - containerPort: 5000
           env:
