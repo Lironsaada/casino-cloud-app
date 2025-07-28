@@ -1,13 +1,23 @@
-from flask import Flask, render_template, request, redirect, url_for, session, flash
+from flask import Flask, render_template, request, redirect, url_for, session, flash, Response
 import random
 import json
 import os
+import time
+import functools
 from datetime import datetime
 from werkzeug.security import generate_password_hash, check_password_hash
+from prometheus_client import Counter, Histogram, Gauge, generate_latest, CONTENT_TYPE_LATEST
 
 app = Flask(__name__)
 # Use environment variable for secret key, fallback to a secure default
 app.secret_key = os.environ.get('SECRET_KEY', 'your-secret-key-change-this-in-production')
+
+# Prometheus metrics
+REQUEST_COUNT = Counter('casino_requests_total', 'Total casino requests', ['method', 'endpoint', 'status'])
+REQUEST_DURATION = Histogram('casino_request_duration_seconds', 'Casino request duration')
+ACTIVE_USERS = Gauge('casino_active_users', 'Number of active users')
+GAMES_PLAYED = Counter('casino_games_played_total', 'Total games played', ['game_type', 'result'])
+USER_BALANCE = Gauge('casino_user_balance', 'User balance', ['username'])
 
 USERS_FILE = "users.json"
 BALANCE_HISTORY_FILE = "balance_history.json"
@@ -71,9 +81,34 @@ def log_transaction(username, transaction_type, amount, details, result=None):
 users = load_users()
 balance_history = load_balance_history()
 
+# Metrics tracking decorator
+import time
+import functools
+
+def track_metrics(f):
+    @functools.wraps(f)
+    def decorated_function(*args, **kwargs):
+        start_time = time.time()
+        try:
+            response = f(*args, **kwargs)
+            status = getattr(response, 'status_code', 200) if hasattr(response, 'status_code') else 200
+            REQUEST_COUNT.labels(method=request.method, endpoint=request.endpoint, status=status).inc()
+            return response
+        except Exception as e:
+            status = 500
+            REQUEST_COUNT.labels(method=request.method, endpoint=request.endpoint, status=status).inc()
+            raise
+        finally:
+            REQUEST_DURATION.observe(time.time() - start_time)
+    return decorated_function
+
 def current_user():
     if "username" in session:
-        return next((u for u in users if u["username"] == session["username"]), None)
+        user = next((u for u in users if u["username"] == session["username"]), None)
+        if user:
+            # Update last active timestamp
+            user["last_active"] = time.time()
+        return user
     return None
 
 def require_login():
@@ -81,6 +116,7 @@ def require_login():
         return redirect(url_for("login"))
 
 @app.route("/", methods=["GET", "POST"])
+@track_metrics
 def login():
     if request.method == "POST":
         username = request.form["username"].strip()
@@ -99,6 +135,10 @@ def login():
             save_users()
             flash(f"Account created for {username} with 1000 coins")
         
+        # Update last active timestamp
+        user["last_active"] = time.time()
+        save_users()
+        
         session["username"] = username
         session["is_admin"] = user["is_admin"]
         return redirect(url_for("menu"))
@@ -110,6 +150,7 @@ def logout():
     return redirect(url_for("login"))
 
 @app.route("/menu")
+@track_metrics
 def menu():
     if not current_user():
         return redirect(url_for("login"))
@@ -217,6 +258,17 @@ def admin_logout():
     flash("Admin session ended.", "info")
     return redirect(url_for("menu"))
 
+@app.route("/metrics")
+def metrics():
+    # Update active users gauge
+    ACTIVE_USERS.set(len([u for u in users if u.get('last_active', 0) > time.time() - 3600]))
+    
+    # Update user balance metrics
+    for user in users:
+        USER_BALANCE.labels(username=user['username']).set(user['balance'])
+    
+    return Response(generate_latest(), mimetype=CONTENT_TYPE_LATEST)
+
 ##############################
 # Blackjack helper functions #
 ##############################
@@ -249,6 +301,7 @@ def hand_value(hand):
     return total
 
 @app.route("/blackjack_bet", methods=["GET", "POST"])
+@track_metrics
 def blackjack_bet():
     user = current_user()
     if not user:
@@ -411,6 +464,9 @@ def blackjack_bet():
             details += " (Natural Blackjack)"
         log_transaction(user["username"], "blackjack", net_amount, details, transaction_result)
         
+        # Track game metrics
+        GAMES_PLAYED.labels(game_type="blackjack", result=transaction_result).inc()
+        
         session.pop("blackjack")  # Clear game session
 
         return render_template("blackjack_result.html",
@@ -426,6 +482,7 @@ def blackjack_bet():
 #########################
 
 @app.route("/roulette", methods=["GET", "POST"])
+@track_metrics
 def roulette():
     user = current_user()
     if not user:
@@ -490,6 +547,9 @@ def roulette():
         net_amount = winnings - bet_amount if win else -bet_amount
         log_transaction(user["username"], "roulette", net_amount, 
                        f"Roulette bet on {bet_color}: {bet_amount} coins", transaction_result)
+        
+        # Track game metrics
+        GAMES_PLAYED.labels(game_type="roulette", result=transaction_result).inc()
 
         # Return JSON for AJAX requests
         if request.is_json:
@@ -509,6 +569,7 @@ def roulette():
 #########################
 
 @app.route("/slots", methods=["GET", "POST"])
+@track_metrics
 def slots():
     user = current_user()
     if not user:
@@ -573,6 +634,9 @@ def slots():
         net_amount = winnings - bet_amount if win else -bet_amount
         log_transaction(user["username"], "slots", net_amount, 
                        f"Slots bet: {bet_amount} coins", transaction_result)
+        
+        # Track game metrics
+        GAMES_PLAYED.labels(game_type="slots", result=transaction_result).inc()
 
         # Return JSON for AJAX requests
         if request.is_json:
