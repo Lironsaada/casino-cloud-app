@@ -100,6 +100,32 @@ The application exposes Prometheus metrics at `/metrics` endpoint:
 
 ---
 
+## ⚡ Quick Start (For New Users)
+
+### **One-Command Setup**
+
+```bash
+# Clone and start the entire application
+git clone https://github.com/Lironsaada/casino-cloud-app.git
+cd casino-cloud-app
+chmod +x quick-start.sh
+./quick-start.sh
+```
+
+**What this does:**
+1. ✅ Generates secure `SECRET_KEY` automatically
+2. ✅ Creates `.env` file from template
+3. ✅ Installs all Python dependencies
+4. ✅ Starts Docker containers (Grafana + Prometheus)
+5. ✅ Launches the Flask casino application
+
+**Access Points:**
+- 🎰 **Casino App**: http://localhost:5000
+- 📊 **Grafana Dashboard**: http://localhost:3000 (admin / your-password)
+- 📈 **Prometheus Metrics**: http://localhost:9090
+
+---
+
 ## 🚀 Deployment Instructions
 
 ### **Prerequisites**

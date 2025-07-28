@@ -7,10 +7,12 @@ import functools
 from datetime import datetime
 from werkzeug.security import generate_password_hash, check_password_hash
 from prometheus_client import Counter, Histogram, Gauge, generate_latest, CONTENT_TYPE_LATEST
-
 app = Flask(__name__)
 # Use environment variable for secret key, fallback to a secure default
 app.secret_key = os.environ.get('SECRET_KEY', 'your-secret-key-change-this-in-production')
+
+# Use environment variable for admin password - never hardcode passwords!
+ADMIN_PASS = os.environ.get('ADMIN_PASSWORD', 'change-this-default-password-immediately')
 
 # Prometheus metrics
 REQUEST_COUNT = Counter('casino_requests_total', 'Total casino requests', ['method', 'endpoint', 'status'])
@@ -208,7 +210,7 @@ def tip():
 def admin_auth():
     if request.method == "POST":
         password = request.form.get("password")
-        if password == "admin":
+        if password == ADMIN_PASS:
             session["admin_authenticated"] = True
             flash("Admin access granted!", "success")
             return redirect(url_for("admin"))
