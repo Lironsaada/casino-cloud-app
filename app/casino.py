@@ -1,9 +1,14 @@
 import os
 import getpass
 import json
+from werkzeug.security import check_password_hash, generate_password_hash
 
 USERS_DIR = ".users"
-ADMIN_PASS = "Liron1136"
+# Use environment variable for admin password - never hardcode passwords!
+ADMIN_PASS = os.environ.get('ADMIN_PASSWORD', 'change-this-default-password-immediately')
+
+# For production, set the ADMIN_PASSWORD environment variable
+# Example: export ADMIN_PASSWORD="your-secure-admin-password"
 
 # Make sure the user data directory exists
 os.makedirs(USERS_DIR, exist_ok=True)
