@@ -140,8 +140,7 @@ Casino Cloud App is a sophisticated web-based casino platform featuring multiple
 
 5. **Run the application**
    ```bash
-   cd app
-   python3 app.py
+   python3 -m app.app
    ```
 
 6. **Access the application**
@@ -220,12 +219,17 @@ casino-cloud-app/
 
 ### **Build Docker Image**
 ```bash
-docker build -t casino-cloud-app:latest .
+docker build -t lironsaada/casino-app:latest .
 ```
 
 ### **Run with Docker**
 ```bash
-docker run -p 5000:5000 -e FLASK_SECRET_KEY="your-secret-key" casino-cloud-app:latest
+docker run -p 5000:5000 -e FLASK_SECRET_KEY="your-secret-key" lironsaada/casino-app:latest
+```
+
+### **Push to Docker Hub**
+```bash
+docker push lironsaada/casino-app:latest
 ```
 
 ---
