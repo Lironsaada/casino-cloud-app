@@ -1,9 +1,85 @@
-<!doctype html>
-<title>Blackjack Result</title>
-<h2>Blackjack Result</h2>
-<p>Your Hand: {{ player_hand }} (Value: {{ player_val }})</p>
-<p>Dealer's Hand: {{ dealer_hand }} (Value: {{ dealer_val }})</p>
-<p>{{ result }}</p>
-<p>Balance: {{ balance }}</p>
-<a href="{{ url_for('blackjack') }}">Play Again</a> |
-<a href="{{ url_for('menu') }}">Back to menu</a>
+{% extends "base.html" %}
+
+{% block title %}Blackjack Result{% endblock %}
+
+{% block content %}
+<div class="container">
+    <div class="row justify-content-center">
+        <div class="col-md-8 col-lg-7">
+            <div class="form-card text-center">
+                <h2 class="mb-4">{{ result }}</h2>
+                
+                <div class="mb-4">
+                    <p class="lead text-light-gray">Final Balance: <strong class="text-primary-gold">{{ balance }} coins</strong></p>
+                </div>
+
+                <div class="row">
+                    <!-- Player's Final Hand -->
+                    <div class="col-md-6 mb-4">
+                        <h4 class="hand-title">Your Hand ({{ player_val }})</h4>
+                        <div class="playing-cards-container">
+                            {% for card in player_hand %}
+                                <div class="card-display">{{ card }}</div>
+                            {% endfor %}
+                        </div>
+                    </div>
+                    <!-- Dealer's Final Hand -->
+                    <div class="col-md-6 mb-4">
+                        <h4 class="hand-title">Dealer's Hand ({{ dealer_val }})</h4>
+                        <div class="playing-cards-container">
+                             {% for card in dealer_hand %}
+                                <div class="card-display">{{ card }}</div>
+                            {% endfor %}
+                        </div>
+                    </div>
+                </div>
+
+                <div class="d-grid gap-2 d-md-block mt-4">
+                    <a href="{{ url_for('blackjack_bet') }}" class="btn btn-primary btn-lg">Play Again</a>
+                    <a href="{{ url_for('menu') }}" class="btn btn-secondary btn-lg">Back to Menu</a>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<style>
+    .hand-title {
+        color: var(--primary-gold);
+        text-transform: uppercase;
+        letter-spacing: 2px;
+        font-size: 1.1rem;
+        margin-bottom: 1rem;
+    }
+    .playing-cards-container {
+        display: flex;
+        justify-content: center;
+        flex-wrap: wrap;
+        gap: 10px;
+    }
+    .card-display {
+        width: 70px;
+        height: 100px;
+        background-color: var(--soft-white);
+        color: var(--dark-blue);
+        border: 1px solid var(--light-gray);
+        border-radius: 8px;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        font-size: 1.8rem;
+        font-weight: 700;
+        box-shadow: 0 4px 10px rgba(0,0,0,0.2);
+    }
+    .hand-group {
+        display: flex;
+        gap: 10px;
+        margin-bottom: 10px;
+        padding: 10px;
+        border: 1px solid #4a5568;
+        border-radius: 12px;
+    }
+</style>
+{% endblock %}

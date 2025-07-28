@@ -1,5 +1,49 @@
-<!doctype html>
-<title>Balance</title>
-<h2>Your Balance</h2>
-<p>You have {{ balance }} coins.</p>
-<a href="{{ url_for('menu') }}">Back to menu</a>
+{% extends "base.html" %}
+
+{% block title %}Balance History{% endblock %}
+
+{% block content %}
+<div class="container">
+    <div class="row justify-content-center">
+        <div class="col-md-10 col-lg-8">
+            <div class="form-card">
+                <h2 class="text-center mb-4"><i class="fas fa-wallet text-primary-gold"></i> Balance History</h2>
+                <div class="text-center mb-4">
+                    <h4>Current Balance: <span class="text-primary-gold">{{ balance }} coins</span></h4>
+                </div>
+                
+                <div class="table-responsive">
+                    <table class="table table-dark table-striped table-hover">
+                        <thead>
+                            <tr>
+                                <th>Date</th>
+                                <th>Type</th>
+                                <th>Details</th>
+                                <th>Amount</th>
+                                <th>Result</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for record in history %}
+                            <tr>
+                                <td>{{ record.timestamp|truncate(16, True, '') }}</td>
+                                <td>{{ record.type }}</td>
+                                <td>{{ record.details }}</td>
+                                <td class="{{ 'text-success' if record.result == 'won' else 'text-danger' if record.result == 'lost' else '' }}">
+                                    {{ record.amount }}
+                                </td>
+                                <td>{{ record.result }}</td>
+                            </tr>
+                            {% else %}
+                            <tr>
+                                <td colspan="5" class="text-center">No transaction history found.</td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

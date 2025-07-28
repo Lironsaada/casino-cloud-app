@@ -1,14 +1,31 @@
-<!doctype html>
-<title>Tip User</title>
-<h2>Tip a User</h2>
-<form method="POST">
-  Username to tip: <input name="to_user" required><br>
-  Amount: <input name="amount" required><br>
-  <button type="submit">Send Tip</button>
-</form>
-<a href="{{ url_for('menu') }}">Back to menu</a>
-{% with messages = get_flashed_messages() %}
-  {% if messages %}
-    <ul>{% for msg in messages %}<li>{{ msg }}</li>{% endfor %}</ul>
-  {% endif %}
-{% endwith %}
+{% extends "base.html" %}
+
+{% block title %}Tip a User{% endblock %}
+
+{% block content %}
+<div class="container">
+    <div class="row justify-content-center">
+        <div class="col-md-6 col-lg-5">
+            <div class="form-card text-center">
+                <h2 class="mb-3"><i class="fas fa-gift text-primary-gold"></i> Tip a User</h2>
+                <p class="mb-4 text-light-gray">Your current balance is: <strong>{{ balance }} coins</strong></p>
+                
+                <form method="POST">
+                    <div class="mb-3">
+                        <label for="username" class="form-label">Recipient's Username</label>
+                        <input type="text" class="form-control" name="username" id="username" placeholder="Enter username" required>
+                    </div>
+                    <div class="mb-3">
+                        <label for="amount" class="form-label">Amount to Tip</label>
+                        <input type="number" class="form-control" name="amount" id="amount" min="1" max="{{ balance }}" placeholder="e.g., 50" required>
+                    </div>
+                    <div class="d-grid gap-2">
+                        <button type="submit" class="btn btn-primary btn-lg">Send Tip</button>
+                        <a href="{{ url_for('menu') }}" class="btn btn-secondary">Back to Menu</a>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

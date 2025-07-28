@@ -1,18 +1,442 @@
-<!doctype html>
-<title>Casino Menu</title>
-<h2>Welcome, {{username}}!</h2>
-<p>Balance: {{balance}} coins</p>
-<ul>
-  <li><a href="{{ url_for('blackjack') }}">Play Blackjack</a></li>
-  <li><a href="{{ url_for('roulette') }}">Play Roulette</a></li>
-  <li><a href="{{ url_for('slots') }}">Play Slots</a></li>
-  <li><a href="{{ url_for('tip') }}">Tip a User</a></li>
-  <li><a href="{{ url_for('check_balance') }}">Check Balance</a></li>
-  <li><a href="{{ url_for('admin') }}">Admin Options</a></li>
-  <li><a href="{{ url_for('logout') }}">Logout</a></li>
-</ul>
-{% with messages = get_flashed_messages() %}
-  {% if messages %}
-    <ul>{% for msg in messages %}<li>{{ msg }}</li>{% endfor %}</ul>
-  {% endif %}
-{% endwith %}
+{% extends "base.html" %}
+
+{% block title %}Casino Games - {{ session.username }}{% endblock %}
+
+{% block content %}
+<div class="container">
+    <!-- Welcome Header -->
+    <div class="welcome-header text-center mb-5">
+        <div class="user-avatar mb-3">
+            <i class="fas fa-user-circle"></i>
+        </div>
+        <h1 class="welcome-title">Welcome back, <span class="username-highlight">{{ session.username }}</span>!</h1>
+        <p class="welcome-subtitle">Ready to test your luck? Choose your game below.</p>
+        <div class="user-stats">
+            <div class="stat-item">
+                <i class="fas fa-coins"></i>
+                <span class="stat-value">{{ balance }}</span>
+                <span class="stat-label">Coins</span>
+            </div>
+        </div>
+    </div>
+
+    <!-- Games Grid -->
+    <div class="games-grid">
+        <div class="row g-4 justify-content-center">
+            <!-- Blackjack Card -->
+            <div class="col-lg-4 col-md-6">
+                <a href="{{ url_for('blackjack_bet') }}" class="game-link">
+                    <div class="game-card blackjack-card">
+                        <div class="card-header">
+                            <div class="game-icon">
+                                <i class="fas fa-spade"></i>
+                            </div>
+                        </div>
+                        <div class="card-body">
+                            <h3 class="game-title">Blackjack</h3>
+                            <p class="game-description">Beat the dealer by getting as close to 21 as possible without going over</p>
+                            <div class="game-features">
+                                <span class="feature"><i class="fas fa-star"></i> 3:2 Blackjack Payout</span>
+                                <span class="feature"><i class="fas fa-hand-paper"></i> Double Down</span>
+                                <span class="feature"><i class="fas fa-chart-line"></i> Low House Edge</span>
+                            </div>
+                        </div>
+                        <div class="card-footer">
+                            <div class="play-button">
+                                <i class="fas fa-play"></i>
+                                <span>Play Now</span>
+                            </div>
+                        </div>
+                    </div>
+                </a>
+            </div>
+
+            <!-- Roulette Card -->
+            <div class="col-lg-4 col-md-6">
+                <a href="{{ url_for('roulette') }}" class="game-link">
+                    <div class="game-card roulette-card">
+                        <div class="card-header">
+                            <div class="game-icon">
+                                <i class="fas fa-dot-circle"></i>
+                            </div>
+                        </div>
+                        <div class="card-body">
+                            <h3 class="game-title">Roulette</h3>
+                            <p class="game-description">Place your bet on red, black, or green and watch the wheel spin</p>
+                            <div class="game-features">
+                                <span class="feature"><i class="fas fa-gem"></i> 14x Green Payout</span>
+                                <span class="feature"><i class="fas fa-balance-scale"></i> 2x Red/Black</span>
+                                <span class="feature"><i class="fas fa-magic"></i> Smooth Animation</span>
+                            </div>
+                        </div>
+                        <div class="card-footer">
+                            <div class="play-button">
+                                <i class="fas fa-play"></i>
+                                <span>Spin Now</span>
+                            </div>
+                        </div>
+                    </div>
+                </a>
+            </div>
+
+            <!-- Slots Card -->
+            <div class="col-lg-4 col-md-6">
+                <a href="{{ url_for('slots') }}" class="game-link">
+                    <div class="game-card slots-card">
+                        <div class="card-header">
+                            <div class="game-icon">
+                                7
+                            </div>
+                        </div>
+                        <div class="card-body">
+                            <h3 class="game-title">Slots</h3>
+                            <p class="game-description">Spin the reels and match symbols for massive winning combinations</p>
+                            <div class="game-features">
+                                <span class="feature"><i class="fas fa-trophy"></i> 25x Jackpot</span>
+                                <span class="feature"><i class="fas fa-coins"></i> Multiple Bet Sizes</span>
+                                <span class="feature"><i class="fas fa-rocket"></i> Instant Results</span>
+                            </div>
+                        </div>
+                        <div class="card-footer">
+                            <div class="play-button">
+                                <i class="fas fa-play"></i>
+                                <span>Spin Reels</span>
+                            </div>
+                        </div>
+                    </div>
+                </a>
+            </div>
+        </div>
+    </div>
+
+    <!-- Quick Actions -->
+    <div class="quick-actions mt-5">
+        <div class="row g-3 justify-content-center">
+            <div class="col-auto">
+                <a href="{{ url_for('check_balance') }}" class="quick-action-btn">
+                    <i class="fas fa-wallet"></i>
+                    <span>Check Balance</span>
+                </a>
+            </div>
+            <div class="col-auto">
+                <a href="{{ url_for('tip') }}" class="quick-action-btn">
+                    <i class="fas fa-gift"></i>
+                    <span>Send Tip</span>
+                </a>
+            </div>
+            <div class="col-auto">
+                <a href="{{ url_for('admin_auth') }}" class="quick-action-btn admin-btn">
+                    <i class="fas fa-crown"></i>
+                    <span>Admin Panel</span>
+                </a>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<style>
+    .welcome-header {
+        padding: 2rem 0;
+    }
+
+    .user-avatar {
+        font-size: 4rem;
+        color: var(--primary-gold);
+        text-shadow: 0 0 20px rgba(255, 215, 0, 0.5);
+        animation: pulse 2s infinite;
+    }
+
+    .welcome-title {
+        font-family: 'Orbitron', monospace;
+        font-size: 2.5rem;
+        font-weight: 700;
+        margin-bottom: 1rem;
+        background: linear-gradient(135deg, var(--soft-white) 0%, var(--light-gray) 100%);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        background-clip: text;
+    }
+
+    .username-highlight {
+        background: linear-gradient(135deg, var(--primary-gold) 0%, var(--secondary-gold) 100%);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        background-clip: text;
+        font-weight: 900;
+    }
+
+    .welcome-subtitle {
+        font-size: 1.1rem;
+        color: var(--light-gray);
+        margin-bottom: 2rem;
+    }
+
+    .user-stats {
+        display: flex;
+        justify-content: center;
+        gap: 2rem;
+        margin-top: 1rem;
+    }
+
+    .stat-item {
+        background: linear-gradient(135deg, var(--dark-blue-tint) 0%, var(--dark-blue-lighter) 100%);
+        padding: 1rem 2rem;
+        border-radius: 15px;
+        border: 1px solid rgba(255, 215, 0, 0.2);
+        text-align: center;
+        box-shadow: 0 8px 25px rgba(0, 0, 0, 0.3);
+    }
+
+    .stat-item i {
+        color: var(--primary-gold);
+        font-size: 1.5rem;
+        margin-right: 0.5rem;
+    }
+
+    .stat-value {
+        font-size: 1.8rem;
+        font-weight: 700;
+        color: var(--primary-gold);
+        margin: 0 0.5rem;
+    }
+
+    .stat-label {
+        color: var(--light-gray);
+        font-size: 0.9rem;
+        text-transform: uppercase;
+        letter-spacing: 1px;
+    }
+
+    .games-grid {
+        max-width: 1200px;
+        margin: 0 auto;
+    }
+
+    .game-link {
+        text-decoration: none;
+        display: block;
+        height: 100%;
+    }
+
+    .game-card {
+        background: linear-gradient(135deg, var(--dark-blue-tint) 0%, var(--dark-blue-lighter) 100%);
+        border: 2px solid rgba(255, 215, 0, 0.2);
+        border-radius: 20px;
+        overflow: hidden;
+        height: 100%;
+        display: flex;
+        flex-direction: column;
+        transition: all 0.4s ease;
+        position: relative;
+        box-shadow: 0 15px 45px rgba(0, 0, 0, 0.3);
+    }
+
+    .game-card::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background: linear-gradient(135deg, transparent 0%, rgba(255, 215, 0, 0.1) 50%, transparent 100%);
+        opacity: 0;
+        transition: opacity 0.4s ease;
+        pointer-events: none;
+    }
+
+    .game-card:hover::before {
+        opacity: 1;
+    }
+
+    .game-card:hover {
+        transform: translateY(-15px) scale(1.02);
+        border-color: var(--primary-gold);
+        box-shadow: 0 25px 60px rgba(0, 0, 0, 0.4);
+    }
+
+    .card-header {
+        padding: 1.5rem;
+        text-align: center;
+        position: relative;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+    }
+
+    .game-icon {
+        font-size: 3.5rem;
+        margin: 0 auto;
+        width: 80px;
+        height: 80px;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        background: linear-gradient(135deg, var(--primary-gold) 0%, var(--secondary-gold) 100%);
+        color: var(--dark-blue);
+        box-shadow: 0 10px 30px rgba(255, 215, 0, 0.3);
+        transition: all 0.3s ease;
+        font-weight: 900;
+    }
+
+    .game-card:hover .game-icon {
+        transform: scale(1.1) rotate(5deg);
+        box-shadow: 0 15px 40px rgba(255, 215, 0, 0.4);
+    }
+
+
+
+    .card-body {
+        padding: 0 1.5rem 1.5rem;
+        flex: 1;
+        text-align: center;
+    }
+
+    .game-title {
+        font-family: 'Orbitron', monospace;
+        font-size: 1.8rem;
+        font-weight: 700;
+        margin-bottom: 1rem;
+        background: linear-gradient(135deg, var(--soft-white) 0%, var(--light-gray) 100%);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        background-clip: text;
+    }
+
+    .game-description {
+        color: var(--light-gray);
+        margin-bottom: 1.5rem;
+        line-height: 1.6;
+    }
+
+    .game-features {
+        display: flex;
+        flex-direction: column;
+        gap: 0.5rem;
+    }
+
+    .feature {
+        color: var(--light-gray);
+        font-size: 0.9rem;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 0.5rem;
+    }
+
+    .feature i {
+        color: var(--primary-gold);
+        width: 16px;
+    }
+
+    .card-footer {
+        padding: 1.5rem;
+        background: linear-gradient(135deg, rgba(255, 215, 0, 0.1) 0%, rgba(255, 215, 0, 0.05) 100%);
+        border-top: 1px solid rgba(255, 215, 0, 0.2);
+    }
+
+    .play-button {
+        background: linear-gradient(135deg, var(--primary-gold) 0%, var(--secondary-gold) 100%);
+        color: var(--dark-blue);
+        padding: 1rem 2rem;
+        border-radius: 50px;
+        font-weight: 700;
+        text-transform: uppercase;
+        letter-spacing: 1px;
+        transition: all 0.3s ease;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 0.5rem;
+        box-shadow: 0 8px 25px rgba(255, 215, 0, 0.3);
+    }
+
+    .play-button:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 12px 35px rgba(255, 215, 0, 0.4);
+    }
+
+    .quick-actions {
+        text-align: center;
+    }
+
+    .quick-action-btn {
+        background: linear-gradient(135deg, var(--dark-blue-lighter) 0%, var(--dark-blue-tint) 100%);
+        border: 2px solid rgba(255, 215, 0, 0.2);
+        color: var(--soft-white);
+        padding: 1rem 2rem;
+        border-radius: 50px;
+        text-decoration: none;
+        display: inline-flex;
+        align-items: center;
+        gap: 0.5rem;
+        font-weight: 600;
+        transition: all 0.3s ease;
+        box-shadow: 0 8px 25px rgba(0, 0, 0, 0.2);
+    }
+
+    .quick-action-btn:hover {
+        background: linear-gradient(135deg, var(--primary-gold) 0%, var(--secondary-gold) 100%);
+        color: var(--dark-blue);
+        border-color: var(--primary-gold);
+        transform: translateY(-3px);
+        box-shadow: 0 12px 35px rgba(255, 215, 0, 0.3);
+    }
+
+    .admin-btn {
+        border-color: rgba(107, 70, 193, 0.5);
+    }
+
+    .admin-btn:hover {
+        background: linear-gradient(135deg, var(--accent-purple) 0%, #8b5cf6 100%);
+        border-color: var(--accent-purple);
+        color: white;
+    }
+
+    /* Specific game card themes */
+    .blackjack-card:hover {
+        border-color: #8b5cf6;
+        box-shadow: 0 25px 60px rgba(139, 92, 246, 0.2);
+    }
+
+    .roulette-card:hover {
+        border-color: #ef4444;
+        box-shadow: 0 25px 60px rgba(239, 68, 68, 0.2);
+    }
+
+    .slots-card:hover {
+        border-color: #22c55e;
+        box-shadow: 0 25px 60px rgba(34, 197, 94, 0.2);
+    }
+
+    /* Responsive design */
+    @media (max-width: 768px) {
+        .welcome-title {
+            font-size: 2rem;
+        }
+        
+        .user-stats {
+            flex-direction: column;
+            align-items: center;
+            gap: 1rem;
+        }
+        
+        .game-icon {
+            font-size: 3rem;
+            width: 70px;
+            height: 70px;
+        }
+        
+        .game-title {
+            font-size: 1.5rem;
+        }
+        
+        .quick-action-btn {
+            padding: 0.8rem 1.5rem;
+            margin: 0.5rem;
+        }
+    }
+</style>
+{% endblock %}

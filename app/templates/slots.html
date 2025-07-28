@@ -1,14 +1,372 @@
-<!doctype html>
-<title>Slots</title>
-<h2>Slots</h2>
-<p>Balance: {{ balance }} coins</p>
-<form method="POST">
-  Bet amount: <input name="bet" required><br>
-  <button type="submit">Spin</button>
-</form>
-<a href="{{ url_for('menu') }}">Back to menu</a>
-{% with messages = get_flashed_messages() %}
-  {% if messages %}
-    <ul>{% for msg in messages %}<li>{{ msg }}</li>{% endfor %}</ul>
-  {% endif %}
-{% endwith %}
+{% extends "base.html" %}
+
+{% block title %}Slots{% endblock %}
+
+{% block content %}
+<div class="container">
+    <div class="row justify-content-center">
+        <div class="col-md-10 col-lg-8">
+            <div class="form-card text-center">
+                <h2 class="mb-3"><i class="fas fa-dice-three text-primary-gold"></i> Slots</h2>
+                <p class="mb-4 text-light-gray">Your current balance: <strong id="balance-display">{{ balance }} coins</strong></p>
+
+                <!-- Slots Display -->
+                <div class="slots-container mb-4">
+                    <div class="slot-reel" id="reel1">
+                        <div class="reel-strip">
+                            <div class="symbol">{% if reels %}{{ reels[0] }}{% else %}🍒{% endif %}</div>
+                            <div class="symbol">🔔</div>
+                            <div class="symbol">🍋</div>
+                            <div class="symbol">⭐</div>
+                            <div class="symbol">💎</div>
+                            <div class="symbol">7️⃣</div>
+                        </div>
+                    </div>
+                    <div class="slot-reel" id="reel2">
+                        <div class="reel-strip">
+                            <div class="symbol">{% if reels %}{{ reels[1] }}{% else %}🔔{% endif %}</div>
+                            <div class="symbol">🍋</div>
+                            <div class="symbol">⭐</div>
+                            <div class="symbol">💎</div>
+                            <div class="symbol">7️⃣</div>
+                            <div class="symbol">🍒</div>
+                        </div>
+                    </div>
+                    <div class="slot-reel" id="reel3">
+                        <div class="reel-strip">
+                            <div class="symbol">{% if reels %}{{ reels[2] }}{% else %}🍋{% endif %}</div>
+                            <div class="symbol">⭐</div>
+                            <div class="symbol">💎</div>
+                            <div class="symbol">7️⃣</div>
+                            <div class="symbol">🍒</div>
+                            <div class="symbol">🔔</div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Result Display -->
+                <div id="result-display" class="mb-4" {% if not result %}style="display: none;"{% endif %}>
+                    <div id="result-message" class="alert {% if result %}{{ 'result-win' if win else 'result-lose' }}{% endif %}">
+                        {% if result %}{{ result }}{% endif %}
+                    </div>
+                </div>
+
+                <!-- Betting Section -->
+                <div class="betting-section mb-4">
+                    <h4 class="mb-3">Choose Your Bet:</h4>
+                    <div class="bet-buttons row g-2">
+                        <div class="col-4">
+                            <button type="button" class="btn btn-outline-warning btn-lg w-100 bet-btn" 
+                                    data-bet="10" {% if balance < 10 %}disabled{% endif %}>
+                                <i class="fas fa-coins"></i><br>10 Coins
+                            </button>
+                        </div>
+                        <div class="col-4">
+                            <button type="button" class="btn btn-outline-warning btn-lg w-100 bet-btn" 
+                                    data-bet="100" {% if balance < 100 %}disabled{% endif %}>
+                                <i class="fas fa-coins"></i><br>100 Coins
+                            </button>
+                        </div>
+                        <div class="col-4">
+                            <button type="button" class="btn btn-outline-warning btn-lg w-100 bet-btn" 
+                                    data-bet="1000" {% if balance < 1000 %}disabled{% endif %}>
+                                <i class="fas fa-coins"></i><br>1000 Coins
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Spin Button -->
+                <div class="d-grid gap-2 mb-3">
+                    <button type="button" id="spin-btn" class="btn btn-primary btn-lg" disabled>
+                        <i class="fas fa-play"></i> Select Bet Amount to Spin
+                    </button>
+                </div>
+
+                <div class="d-grid">
+                    <a href="{{ url_for('menu') }}" class="btn btn-secondary">Back to Menu</a>
+                </div>
+
+
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<style>
+    .slots-container {
+        display: flex;
+        justify-content: center;
+        gap: 20px;
+        background: linear-gradient(135deg, #1a202c 0%, #2d3748 100%);
+        padding: 2rem;
+        border-radius: 20px;
+        border: 3px solid #ffd700;
+        box-shadow: 
+            inset 0 0 20px rgba(255, 215, 0, 0.2),
+            0 10px 30px rgba(0,0,0,0.5);
+        position: relative;
+        overflow: hidden;
+    }
+
+    .slots-container::before {
+        content: '';
+        position: absolute;
+        top: -2px;
+        left: -2px;
+        right: -2px;
+        bottom: -2px;
+        background: linear-gradient(45deg, #ffd700, #ffed4e, #ffd700);
+        border-radius: 20px;
+        z-index: -1;
+        animation: border-glow 2s ease-in-out infinite alternate;
+    }
+
+    @keyframes border-glow {
+        0% { opacity: 0.5; }
+        100% { opacity: 1; }
+    }
+
+    .slot-reel {
+        width: 120px;
+        height: 120px;
+        background-color: var(--soft-white);
+        border-radius: 15px;
+        overflow: hidden;
+        position: relative;
+        box-shadow: 
+            inset 0 0 10px rgba(0,0,0,0.3),
+            0 5px 15px rgba(0,0,0,0.3);
+        border: 2px solid #e2e8f0;
+    }
+
+    .reel-strip {
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 100%;
+        transition: transform 0.1s ease-out;
+    }
+
+    .symbol {
+        width: 120px;
+        height: 120px;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        font-size: 4rem;
+        color: var(--dark-blue);
+        font-weight: bold;
+    }
+
+    .betting-section {
+        background-color: rgba(45, 55, 72, 0.5);
+        padding: 1.5rem;
+        border-radius: 15px;
+        border: 1px solid #4a5568;
+    }
+
+    .bet-btn {
+        position: relative;
+        overflow: hidden;
+        transition: all 0.3s ease;
+        border: 2px solid #ffd700;
+        color: #ffd700;
+        background: transparent;
+    }
+
+    .bet-btn:hover:not(:disabled) {
+        background-color: #ffd700;
+        color: #1a202c;
+        transform: translateY(-2px);
+        box-shadow: 0 5px 15px rgba(255, 215, 0, 0.4);
+    }
+
+    .bet-btn:disabled {
+        opacity: 0.4;
+        cursor: not-allowed;
+    }
+
+    .bet-btn.selected {
+        background-color: #ffd700;
+        color: #1a202c;
+        box-shadow: 0 0 20px rgba(255, 215, 0, 0.6);
+    }
+
+    #spin-btn {
+        background: linear-gradient(135deg, #48bb78 0%, #38a169 100%);
+        border: none;
+        font-size: 1.2rem;
+        padding: 1rem;
+        transition: all 0.3s ease;
+    }
+
+    #spin-btn:hover:not(:disabled) {
+        transform: translateY(-2px);
+        box-shadow: 0 10px 25px rgba(72, 187, 120, 0.4);
+    }
+
+    #spin-btn:disabled {
+        background: #718096;
+        cursor: not-allowed;
+    }
+
+    .spinning {
+        animation: spin-reel 0.1s linear infinite;
+    }
+
+    @keyframes spin-reel {
+        0% { transform: translateY(0); }
+        100% { transform: translateY(-720px); }
+    }
+
+    .result-win {
+        background-color: #48bb78 !important;
+        color: white !important;
+        border-color: #38a169 !important;
+    }
+
+    .result-lose {
+        background-color: #f56565 !important;
+        color: white !important;
+        border-color: #e53e3e !important;
+    }
+</style>
+
+<script>
+    const symbols = ["🍒", "🔔", "🍋", "⭐", "💎", "7️⃣"];
+    const reels = [
+        document.getElementById('reel1').querySelector('.reel-strip'),
+        document.getElementById('reel2').querySelector('.reel-strip'),
+        document.getElementById('reel3').querySelector('.reel-strip')
+    ];
+    const betButtons = document.querySelectorAll('.bet-btn');
+    const spinButton = document.getElementById('spin-btn');
+    const resultDisplay = document.getElementById('result-display');
+    const resultMessage = document.getElementById('result-message');
+    const balanceDisplay = document.getElementById('balance-display');
+
+    let selectedBet = 0;
+    let isSpinning = false;
+
+    // Bet selection
+    betButtons.forEach(button => {
+        button.addEventListener('click', function() {
+            if (this.disabled || isSpinning) return;
+            
+            // Remove selected class from all buttons
+            betButtons.forEach(btn => btn.classList.remove('selected'));
+            
+            // Add selected class to clicked button
+            this.classList.add('selected');
+            
+            selectedBet = parseInt(this.dataset.bet);
+            
+            // Update spin button
+            spinButton.disabled = false;
+            spinButton.innerHTML = `<i class="fas fa-play"></i> Spin for ${selectedBet} Coins`;
+        });
+    });
+
+    // Spin function
+    spinButton.addEventListener('click', function() {
+        if (selectedBet === 0 || isSpinning) return;
+        
+        isSpinning = true;
+        resultDisplay.style.display = 'none';
+        
+        // Disable all buttons during spin
+        betButtons.forEach(btn => btn.disabled = true);
+        spinButton.disabled = true;
+        spinButton.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Spinning...';
+        
+        // Make AJAX request to get results
+        fetch('/slots', {
+            method: 'POST',
+            headers: { 
+                'Content-Type': 'application/json',
+                'X-Requested-With': 'XMLHttpRequest'
+            },
+            body: JSON.stringify({ bet: selectedBet })
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.error) {
+                showResult(data.error, false);
+                return;
+            }
+            
+            // Start spinning animation
+            reels.forEach(reel => {
+                reel.classList.add('spinning');
+            });
+            
+            // Spin for 2 seconds then show results
+            setTimeout(() => {
+                // Stop spinning animation
+                reels.forEach(reel => {
+                    reel.classList.remove('spinning');
+                });
+                
+                // Update the reels to show the actual results
+                const symbols = data.reels;
+                reels.forEach((reel, index) => {
+                    const symbolElement = reel.querySelector('.symbol');
+                    symbolElement.textContent = symbols[index];
+                });
+                
+                // Show result message
+                showResult(data.message, data.win);
+                
+                // Update balance display
+                balanceDisplay.textContent = `${data.balance} coins`;
+                
+                // Update button states based on new balance
+                updateButtonStates();
+                
+            }, 2000);
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            // Stop spinning on error
+            reels.forEach(reel => {
+                reel.classList.remove('spinning');
+            });
+            showResult('Network error. Please try again.', false);
+        });
+    });
+
+    function showResult(message, isWin) {
+        resultMessage.textContent = message;
+        resultMessage.className = `alert ${isWin ? 'result-win' : 'result-lose'}`;
+        resultDisplay.style.display = 'block';
+        
+        // Re-enable buttons
+        isSpinning = false;
+        updateButtonStates();
+        
+        if (selectedBet > 0) {
+            spinButton.innerHTML = `<i class="fas fa-play"></i> Spin for ${selectedBet} Coins`;
+        } else {
+            spinButton.innerHTML = '<i class="fas fa-play"></i> Select Bet Amount to Spin';
+        }
+    }
+
+    function updateButtonStates() {
+        const currentBalance = parseInt(balanceDisplay.textContent);
+        betButtons.forEach(button => {
+            const betAmount = parseInt(button.dataset.bet);
+            button.disabled = betAmount > currentBalance || isSpinning;
+        });
+        
+        if (selectedBet > 0) {
+            spinButton.disabled = selectedBet > currentBalance || isSpinning;
+        }
+    }
+
+    // Update button states on page load
+    updateButtonStates();
+</script>
+{% endblock %}

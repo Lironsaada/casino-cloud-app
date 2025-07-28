@@ -1,13 +1,29 @@
-<!doctype html>
-<title>Login</title>
-<h2>Login / Register</h2>
-<form method="POST">
-  Username: <input name="username" required><br>
-  Password: <input name="password" type="password" required><br>
-  <button type="submit">Login</button>
-</form>
-{% with messages = get_flashed_messages() %}
-  {% if messages %}
-    <ul>{% for msg in messages %}<li>{{ msg }}</li>{% endfor %}</ul>
-  {% endif %}
-{% endwith %}
+{% extends "base.html" %}
+
+{% block title %}Login{% endblock %}
+
+{% block content %}
+<div class="container">
+    <div class="row justify-content-center">
+        <div class="col-md-6 col-lg-5">
+            <div class="form-card">
+                <h2 class="text-center mb-4"><i class="fas fa-sign-in-alt me-2"></i>Login / Register</h2>
+                <p class="text-center text-light-gray mb-4">New users get 1000 coins to start!</p>
+                <form method="POST">
+                    <div class="mb-3">
+                        <label for="username" class="form-label">Username</label>
+                        <input type="text" class="form-control" id="username" name="username" required>
+                    </div>
+                    <div class="mb-4">
+                        <label for="password" class="form-label">Password</label>
+                        <input type="password" class="form-control" id="password" name="password" required>
+                    </div>
+                    <div class="d-grid">
+                        <button type="submit" class="btn btn-primary btn-lg">Continue</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
