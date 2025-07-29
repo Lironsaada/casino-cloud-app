@@ -605,31 +605,56 @@
         });
     });
 
-    // Form validation and confirmation
-    document.querySelectorAll('form').forEach(form => {
+    // Improved form handling with better button detection
+    document.querySelectorAll('form.quick-form').forEach(form => {
+        // Add click handlers to buttons to set action value
+        const buttons = form.querySelectorAll('button[type="submit"]');
+        buttons.forEach(button => {
+            button.addEventListener('click', function(e) {
+                // Set action value in a hidden input or data attribute
+                let actionInput = form.querySelector('input[name="action"]');
+                if (!actionInput) {
+                    actionInput = document.createElement('input');
+                    actionInput.type = 'hidden';
+                    actionInput.name = 'action';
+                    form.appendChild(actionInput);
+                }
+                actionInput.value = this.value;
+            });
+        });
+
         form.addEventListener('submit', function(e) {
-            const action = this.querySelector('button[type="submit"]:focus')?.value || 
-                          this.querySelector('input[name="action"]')?.value;
-            const username = this.querySelector('select[name="username"]')?.value || 
-                           this.querySelector('input[name="username"]')?.value;
-            const amount = this.querySelector('input[name="amount"]')?.value;
+            const username = this.querySelector('select[name="username"]').value;
+            const amount = this.querySelector('input[name="amount"]').value;
+            const action = this.querySelector('input[name="action"]').value;
             
-            if (action === 'subtract' && amount) {
+            // Validation
+            if (!username) {
+                alert('Please select a user');
+                e.preventDefault();
+                return;
+            }
+            
+            if (!amount || amount <= 0) {
+                alert('Please enter a valid amount');
+                e.preventDefault();
+                return;
+            }
+            
+            // Confirmation for destructive actions
+            if (action === 'subtract') {
                 if (!confirm(`Are you sure you want to remove ${amount} coins from ${username}?`)) {
                     e.preventDefault();
+                    return;
                 }
-            } else if (action === 'set' && amount) {
+            } else if (action === 'set') {
                 if (!confirm(`Are you sure you want to set ${username}'s balance to ${amount} coins?`)) {
                     e.preventDefault();
+                    return;
                 }
             }
-        });
-    });
-
-    // Add click event listener to focused button for form submission
-    document.querySelectorAll('button[type="submit"]').forEach(button => {
-        button.addEventListener('click', function() {
-            this.focus();
+            
+            console.log('Submitting form:', { username, amount, action });
         });
     });
 </script>

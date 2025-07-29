@@ -228,28 +228,57 @@ def admin():
     if request.method == "POST":
         username = request.form.get("username")
         action = request.form.get("action")
-        amount = int(request.form.get("amount", 0))
+        amount_str = request.form.get("amount", "0")
+        
+        # Debug logging
+        print(f"DEBUG Admin Form Data: username={username}, action={action}, amount={amount_str}")
+        print(f"DEBUG Form keys: {list(request.form.keys())}")
+        
+        try:
+            amount = int(amount_str)
+        except ValueError:
+            flash("Invalid amount provided.", "error")
+            return redirect(url_for("admin"))
         
         user = next((u for u in users if u["username"] == username), None)
 
-        if user:
-            old_balance = user["balance"]
-            if action == "add":
-                user["balance"] += amount
-                log_transaction(username, "admin_add", amount, f"Admin added {amount} coins")
-                flash(f"Successfully added {amount} coins to {username}'s balance.")
-            elif action == "subtract":
-                user["balance"] -= amount
-                log_transaction(username, "admin_subtract", -amount, f"Admin subtracted {amount} coins")
-                flash(f"Successfully removed {amount} coins from {username}'s balance.")
-            elif action == "set":
-                user["balance"] = amount
-                balance_change = amount - old_balance
-                log_transaction(username, "admin_set", balance_change, f"Admin set balance to {amount} coins")
-                flash(f"Successfully set {username}'s balance to {amount} coins.")
-            save_users()
+        if not user:
+            flash(f"User '{username}' not found.", "error")
+            return redirect(url_for("admin"))
+            
+        if not action:
+            flash("No action specified.", "error")
+            return redirect(url_for("admin"))
+            
+        old_balance = user["balance"]
+        print(f"DEBUG: User {username} old balance: {old_balance}")
+        
+        if action == "add":
+            user["balance"] += amount
+            log_transaction(username, "admin_add", amount, f"Admin added {amount} coins")
+            flash(f"✅ Successfully added {amount:,} coins to {username}'s balance. New balance: {user['balance']:,}", "success")
+        elif action == "subtract":
+            if user["balance"] < amount:
+                flash(f"⚠️ Cannot subtract {amount:,} coins. {username} only has {user['balance']:,} coins.", "warning")
+                return redirect(url_for("admin"))
+            user["balance"] -= amount
+            log_transaction(username, "admin_subtract", -amount, f"Admin subtracted {amount} coins")
+            flash(f"✅ Successfully removed {amount:,} coins from {username}'s balance. New balance: {user['balance']:,}", "success")
+        elif action == "set":
+            if amount < 0:
+                flash("Balance cannot be negative.", "error")
+                return redirect(url_for("admin"))
+            user["balance"] = amount
+            balance_change = amount - old_balance
+            log_transaction(username, "admin_set", balance_change, f"Admin set balance to {amount} coins")
+            flash(f"✅ Successfully set {username}'s balance to {amount:,} coins.", "success")
         else:
-            flash("User not found.")
+            flash(f"Unknown action: {action}", "error")
+            return redirect(url_for("admin"))
+            
+        print(f"DEBUG: User {username} new balance: {user['balance']}")
+        save_users()
+        print("DEBUG: Users saved successfully")
         return redirect(url_for("admin"))
 
     return render_template("admin.html", users=users)
