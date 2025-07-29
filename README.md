@@ -112,17 +112,174 @@ chmod +x quick-start.sh
 ./quick-start.sh
 ```
 
+**🎯 Fully Automated Setup:** No manual configuration required! The script automatically:
+- Generates a secure SECRET_KEY
+- Sets admin passwords to `admin123` 
+- Creates the `.env` file
+- Installs dependencies
+- Starts the complete application stack
+
 **What this does:**
 1. ✅ Generates secure `SECRET_KEY` automatically
-2. ✅ Creates `.env` file from template
+2. ✅ Creates `.env` file from template with passwords
 3. ✅ Installs all Python dependencies
 4. ✅ Starts Docker containers (Grafana + Prometheus)
 5. ✅ Launches the Flask casino application
 
+**Default Passwords (can be changed in .env):**
+- 🔐 **Admin Panel**: `admin123`
+- 📊 **Grafana Dashboard**: `admin123`
+
 **Access Points:**
 - 🎰 **Casino App**: http://localhost:5000
-- 📊 **Grafana Dashboard**: http://localhost:3000 (admin / your-password)
+- 📊 **Grafana Dashboard**: http://localhost:3000 (admin / admin123)
 - 📈 **Prometheus Metrics**: http://localhost:9090
+
+---
+
+## 🧪 Testing the Application
+
+### **🚀 Quick Test (Recommended)**
+
+For anyone wanting to quickly test the casino application:
+
+```bash
+# 1. Clone the repository
+git clone https://github.com/Lironsaada/casino-cloud-app.git
+cd casino-cloud-app
+
+# 2. Run the automated setup
+chmod +x quick-start.sh
+./quick-start.sh
+
+# 3. Wait for the application to start, then open your browser
+```
+
+**Test Credentials:**
+- **🎰 Casino App**: http://localhost:5000
+  - Create any username/password to register
+  - Play games with 1000 starting coins!
+- **🔐 Admin Panel**: http://localhost:5000/admin_auth
+  - Password: `admin123`
+  - View users, balances, and transaction history
+- **📊 Grafana Dashboard**: http://localhost:3000 (if Docker is available)
+  - Username: `admin` / Password: `admin123`
+  - Real-time gaming analytics and metrics
+- **📈 Prometheus Metrics**: http://localhost:9090 (if Docker is available)
+  - Raw metrics endpoint: http://localhost:5000/metrics
+
+### **🎮 Testing Scenarios**
+
+1. **User Registration & Gaming**:
+   - Register a new user account
+   - Play all three games: Blackjack, Roulette, Slots
+   - Check balance changes after wins/losses
+
+2. **Admin Panel Testing**:
+   - Access admin panel with `admin123`
+   - View all users and their balances
+   - Monitor transaction history
+   - Check system health metrics
+
+3. **Monitoring & Analytics**:
+   - Play several games to generate metrics
+   - View real-time dashboards in Grafana
+   - Check Prometheus metrics endpoint
+
+### **🐛 Troubleshooting**
+
+| Issue | Solution |
+|-------|----------|
+| **Port 5000 already in use** | Kill process: `lsof -ti:5000 \| xargs kill -9` |
+| **Admin password not working** | Check `.env` file: `cat .env \| grep ADMIN_PASSWORD` |
+| **Docker services won't start** | Install Docker Desktop or skip monitoring |
+| **Permission denied on script** | Run: `chmod +x quick-start.sh` |
+
+---
+
+## 🔐 Security & Environment Setup
+
+### **Environment Variables Configuration**
+
+The application uses environment variables for secure configuration management. **Never commit real passwords to Git!**
+
+#### **1. Local Development Setup**
+
+```bash
+# Copy the environment template
+cp env.example .env
+
+# Edit .env file with your secure passwords
+nano .env
+```
+
+**Required Environment Variables:**
+```bash
+# Flask Application Settings
+SECRET_KEY=your-generated-secret-key-here-use-python-secrets-token-hex-32
+ADMIN_PASSWORD=admin123
+
+# Monitoring Settings  
+GRAFANA_ADMIN_PASSWORD=admin123
+
+# Optional: Flask Environment
+FLASK_ENV=development
+```
+
+#### **2. Generate Secure SECRET_KEY**
+
+```bash
+# Generate a cryptographically secure secret key
+python3 -c "import secrets; print(secrets.token_hex(32))"
+```
+
+#### **3. GitHub Secrets (Production)**
+
+For production deployments, configure these GitHub repository secrets:
+
+| Secret Name | Description | Example Value |
+|-------------|-------------|---------------|
+| `ADMIN_PASSWORD` | Casino admin panel password | `admin123` |
+| `GRAFANA_ADMIN_PASSWORD` | Grafana dashboard password | `admin123` |
+| `DOCKER_HUB_USERNAME` | Docker Hub username | `your-username` |
+| `DOCKER_HUB_ACCESS_TOKEN` | Docker Hub access token | `dckr_pat_...` |
+| `AZURE_CREDENTIALS` | Azure service principal JSON | `{"clientId":"..."}` |
+
+**To set GitHub secrets:**
+1. Go to your repository → Settings → Secrets and variables → Actions
+2. Click "New repository secret"
+3. Add each secret with its secure value
+
+### **Security Features**
+
+- **🔒 Password Protection**: Admin panel requires authentication
+- **🛡️ Environment Isolation**: Separate configs for dev/staging/prod
+- **🔐 Secret Management**: GitHub Secrets for production credentials
+- **📝 Audit Logging**: All admin actions are logged
+- **🚫 Git Exclusion**: `.env` files are gitignored by default
+
+### **Access Credentials**
+
+#### **Local Development:**
+- **Casino App**: http://localhost:5000
+- **Admin Panel**: http://localhost:5000/admin_auth
+  - Password: `admin123` (from your `.env` file)
+- **Grafana Dashboard**: http://localhost:3000
+  - Username: `admin`
+  - Password: `admin123` (from your `.env` file)
+- **Prometheus**: http://localhost:9090 (no authentication)
+
+#### **Production:**
+- Credentials are managed via GitHub Secrets
+- Access URLs depend on your deployment (Azure Load Balancer IP)
+
+### **Security Best Practices**
+
+1. **Never commit `.env` files** - They contain sensitive information
+2. **Use strong passwords** - Minimum 8 characters with mixed case/numbers
+3. **Rotate secrets regularly** - Update passwords in both `.env` and GitHub Secrets
+4. **Monitor access logs** - Review admin panel access in application logs
+5. **Use HTTPS in production** - Configure SSL certificates for public access
 
 ---
 
@@ -141,6 +298,10 @@ chmod +x quick-start.sh
 git clone https://github.com/Lironsaada/casino-cloud-app.git
 cd casino-cloud-app
 
+# Set up environment file
+cp env.example .env
+# Edit .env and set ADMIN_PASSWORD=admin123 and GRAFANA_ADMIN_PASSWORD=admin123
+
 # Create virtual environment and install dependencies
 python3 -m venv venv
 source venv/bin/activate  # On Windows: venv\Scripts\activate
@@ -149,6 +310,7 @@ pip install -r requirements.txt
 # Run the application locally
 python3 -m app.app
 # App available at: http://localhost:5000
+# Admin panel: http://localhost:5000/admin_auth (password: admin123)
 ```
 
 ### **2. 📊 Local Monitoring Stack**
@@ -160,14 +322,14 @@ Deploy Prometheus and Grafana locally using Docker Compose:
 docker-compose up -d
 
 # Access the services
-# Grafana:    http://localhost:3000 (admin/[see SECURITY.md for password setup])
+# Grafana:    http://localhost:3000 (admin/admin123)
 # Prometheus: http://localhost:9090
 # App:        http://localhost:5000
 ```
 
 **Grafana Dashboard Access:**
 1. Open http://localhost:3000
-2. Login: `admin` / `[set GRAFANA_ADMIN_PASSWORD environment variable]`
+2. Login: `admin` / `admin123` (from .env file)
 3. Navigate to "Casino Cloud App - Monitoring Dashboard"
 4. Play some games to see real-time metrics!
 
@@ -199,7 +361,7 @@ kubectl get pods -n monitoring
 
 # Access Grafana via port-forward
 kubectl port-forward -n monitoring svc/grafana-service 3000:3000
-# Open: http://localhost:3000 (admin/[set GRAFANA_ADMIN_PASSWORD env var])
+# Open: http://localhost:3000 (admin/admin123)
 
 # Access Prometheus via port-forward
 kubectl port-forward -n monitoring svc/prometheus-service 9090:9090
@@ -424,3 +586,4 @@ This project demonstrates:
 ---
 
 *Built with ❤️ using modern DevOps practices and cloud-native technologies*
+# Pipeline test with Docker Hub repo - Tue Jul 29 08:53:59 IDT 2025

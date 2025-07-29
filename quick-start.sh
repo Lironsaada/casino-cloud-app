@@ -12,13 +12,14 @@ if [ ! -f .env ]; then
     SECRET_KEY=$(python3 -c "import secrets; print(secrets.token_hex(32))")
     sed -i "s/your-generated-secret-key-here-use-python-secrets-token-hex-32/$SECRET_KEY/" .env
     
-    echo "⚠️  Please edit .env and set your passwords:"
-    echo "   - ADMIN_PASSWORD (for admin panel access)"
-    echo "   - GRAFANA_ADMIN_PASSWORD (for Grafana dashboard)"
-    echo ""
-    echo "   nano .env"
-    echo ""
-    read -p "Press Enter after you've set your passwords..."
+    echo "🔐 Setting default passwords..."
+    sed -i "s/your-secure-admin-password/admin123/" .env
+    sed -i "s/your-grafana-admin-password/admin123/" .env
+    
+    echo "✅ Environment configured with default passwords:"
+    echo "   - ADMIN_PASSWORD: admin123"
+    echo "   - GRAFANA_ADMIN_PASSWORD: admin123"
+    echo "   - You can change these in .env file if needed"
 fi
 
 # Load environment variables
