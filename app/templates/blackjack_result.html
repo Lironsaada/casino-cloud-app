@@ -31,12 +31,12 @@
                                 {% endfor %}
                             </div>
                         {% else %}
-                            <h4 class="hand-title">Your Hand ({{ player_val }})</h4>
-                            <div class="playing-cards-container">
-                                {% for card in player_hand %}
-                                    <div class="card-display">{{ card }}</div>
-                                {% endfor %}
-                            </div>
+                        <h4 class="hand-title">Your Hand ({{ player_val }})</h4>
+                        <div class="playing-cards-container">
+                            {% for card in player_hand %}
+                                <div class="card-display">{{ card }}</div>
+                            {% endfor %}
+                        </div>
                         {% endif %}
                     </div>
                     
