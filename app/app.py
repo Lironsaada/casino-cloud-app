@@ -7,6 +7,10 @@ import functools
 from datetime import datetime
 from werkzeug.security import generate_password_hash, check_password_hash
 from prometheus_client import Counter, Histogram, Gauge, generate_latest, CONTENT_TYPE_LATEST
+from dotenv import load_dotenv
+
+# Load environment variables from .env file
+load_dotenv()
 app = Flask(__name__)
 # Use environment variable for secret key, fallback to a secure default
 app.secret_key = os.environ.get('SECRET_KEY', 'your-secret-key-change-this-in-production')
