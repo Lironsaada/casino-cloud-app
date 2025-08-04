@@ -1,0 +1,67 @@
+# Development environment values for Jenkins
+jenkins:
+  controller:
+    # Development-specific settings
+    adminUser: "admin"
+    adminPassword: "admin123"
+    
+    # Service configuration for development
+    serviceType: NodePort
+    servicePort: 8080
+    nodePort: 30080
+    
+    # Reduced resources for development
+    resources:
+      requests:
+        cpu: "100m"
+        memory: "512Mi"
+      limits:
+        cpu: "1000m"
+        memory: "2048Mi"
+    
+    # Development persistence
+    persistence:
+      enabled: true
+      size: 5Gi
+      storageClass: "standard"
+    
+    # Skip some plugins for faster startup in dev
+    installPlugins:
+      - workflow-aggregator:596.v8c21c963d92d
+      - git:5.2.2
+      - credentials:1371.vfee6b_095f0a_3
+      - credentials-binding:681.vf91669a_32e45
+      - job-dsl:1.87
+      - configuration-as-code:1798.v9dcf2bad52d3
+    
+    # Development ingress
+    ingress:
+      enabled: false  # Use NodePort for dev
+    
+    # JCasC for development
+    JCasC:
+      enabled: true
+      configScripts:
+        jenkins-config: |
+          jenkins:
+            systemMessage: "🎰 Casino App Jenkins - Development Environment"
+            numExecutors: 2
+          
+          credentials:
+            system:
+              domainCredentials:
+              - credentials:
+                - usernamePassword:
+                    scope: GLOBAL
+                    id: "dockerhub-creds"
+                    username: "dev-user"
+                    password: "dev-password"
+                    description: "Development Docker Hub credentials"
+
+# Secrets for development (use dummy values)
+secrets:
+  dockerhubUsername: "dev-user"
+  dockerhubPassword: "dev-password"
+  gitUsername: "dev-user"
+  gitToken: "dev-token"
+  kubeconfig: "dev-kubeconfig"

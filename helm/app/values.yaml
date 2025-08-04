@@ -1,0 +1,59 @@
+replicaCount: 1
+
+image:
+  repository: your-dockerhub-username/your-app
+  tag: latest
+  pullPolicy: IfNotPresent
+
+nameOverride: ""
+fullnameOverride: ""
+
+service:
+  type: ClusterIP
+  port: 8000
+
+ingress:
+  enabled: false
+  className: ""
+  annotations: {}
+  hosts:
+    - host: casino-app.local
+      paths:
+        - path: /
+          pathType: Prefix
+  tls: []
+
+resources:
+  limits:
+    cpu: 500m
+    memory: 512Mi
+  requests:
+    cpu: 250m
+    memory: 256Mi
+
+env:
+  - name: MONGO_URI
+    valueFrom:
+      secretKeyRef:
+        name: casino-secrets
+        key: mongo-uri
+
+probes:
+  liveness:
+    httpGet:
+      path: /healthz
+      port: 5000
+    initialDelaySeconds: 30
+    periodSeconds: 10
+  readiness:
+    httpGet:
+      path: /healthz
+      port: 5000
+    initialDelaySeconds: 5
+    periodSeconds: 5
+
+nodeSelector: {}
+
+tolerations: []
+
+affinity: {}

@@ -1,0 +1,21 @@
+image:
+  repository: your-dockerhub-username/your-app
+  tag: staging-latest
+
+replicaCount: 2
+
+resources:
+  limits:
+    cpu: 400m
+    memory: 384Mi
+  requests:
+    cpu: 200m
+    memory: 192Mi
+
+ingress:
+  enabled: true
+  hosts:
+    - host: casino-staging.example.com
+      paths:
+        - path: /
+          pathType: Prefix

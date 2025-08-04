@@ -1,0 +1,25 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: jenkins-plugins-list
+  namespace: {{ .Release.Namespace }}
+data:
+  plugins.txt: |
+    workflow-aggregator
+    git
+    credentials
+    credentials-binding
+    job-dsl
+    configuration-as-code
+    matrix-auth
+    workflow-multibranch
+    pipeline-stage-view
+    timestamper
+    build-timeout
+    ws-cleanup
+    ant
+    gradle
+    pipeline-utility-steps
+    ssh-agent
+    mailer
+    docker-workflow

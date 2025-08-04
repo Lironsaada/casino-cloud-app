@@ -1,0 +1,21 @@
+image:
+  repository: your-dockerhub-username/your-app
+  tag: prod-latest
+
+replicaCount: 3
+
+resources:
+  limits:
+    cpu: 500m
+    memory: 512Mi
+  requests:
+    cpu: 250m
+    memory: 256Mi
+
+ingress:
+  enabled: true
+  hosts:
+    - host: casino.example.com
+      paths:
+        - path: /
+          pathType: Prefix

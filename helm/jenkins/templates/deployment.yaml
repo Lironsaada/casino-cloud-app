@@ -1,0 +1,79 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ include "jenkins.fullname" . }}
+  namespace: {{ .Release.Namespace }}
+  labels:
+    {{- include "jenkins.labels" . | nindent 4 }}
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      {{- include "jenkins.selectorLabels" . | nindent 6 }}
+  template:
+    metadata:
+      labels:
+        {{- include "jenkins.selectorLabels" . | nindent 8 }}
+    spec:
+      serviceAccountName: {{ include "jenkins.fullname" . }}
+      securityContext:
+        runAsUser: 1000
+        runAsGroup: 1000
+        fsGroup: 1000
+      # Removed init container - using runtime plugin installation instead
+      containers:
+      - name: jenkins
+        image: "jenkins/jenkins:lts"
+        imagePullPolicy: Always
+        ports:
+        - name: http
+          containerPort: 8080
+          protocol: TCP
+        - name: agent
+          containerPort: 50000
+          protocol: TCP
+        env:
+        - name: JAVA_OPTS
+          value: {{ .Values.jenkins.javaOpts | quote }}
+        - name: JENKINS_ADMIN_ID
+          value: {{ .Values.jenkins.adminUser | quote }}
+        - name: JENKINS_ADMIN_PASSWORD
+          value: {{ .Values.jenkins.adminPassword | quote }}
+        - name: CASC_JENKINS_CONFIG
+          value: "/var/jenkins_home/casc_configs/jenkins.yaml"
+        - name: JENKINS_UC_DOWNLOAD
+          value: "https://updates.jenkins.io"
+        resources:
+          {{- toYaml .Values.jenkins.resources | nindent 10 }}
+        volumeMounts:
+        - name: jenkins-home
+          mountPath: /var/jenkins_home
+        - name: jenkins-config
+          mountPath: /var/jenkins_home/casc_configs
+        livenessProbe:
+          httpGet:
+            path: /login
+            port: http
+          initialDelaySeconds: 60
+          periodSeconds: 10
+          timeoutSeconds: 5
+          failureThreshold: 5
+        readinessProbe:
+          httpGet:
+            path: /login
+            port: http
+          initialDelaySeconds: 30
+          periodSeconds: 5
+          timeoutSeconds: 3
+          failureThreshold: 3
+      volumes:
+      - name: jenkins-home
+        {{- if .Values.jenkins.persistence.enabled }}
+        persistentVolumeClaim:
+          claimName: {{ include "jenkins.fullname" . }}-pvc
+        {{- else }}
+        emptyDir: {}
+        {{- end }}
+      - name: jenkins-config
+        configMap:
+          name: jenkins-casc-config

@@ -1,0 +1,23 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ include "jenkins.fullname" . }}
+  namespace: {{ .Release.Namespace }}
+  labels:
+    {{- include "jenkins.labels" . | nindent 4 }}
+spec:
+  type: {{ .Values.jenkins.serviceType }}
+  ports:
+  - port: {{ .Values.jenkins.servicePort }}
+    targetPort: http
+    protocol: TCP
+    name: http
+    {{- if and (eq .Values.jenkins.serviceType "NodePort") .Values.jenkins.nodePort }}
+    nodePort: {{ .Values.jenkins.nodePort }}
+    {{- end }}
+  - port: 50000
+    targetPort: agent
+    protocol: TCP
+    name: agent
+  selector:
+    {{- include "jenkins.selectorLabels" . | nindent 4 }}
