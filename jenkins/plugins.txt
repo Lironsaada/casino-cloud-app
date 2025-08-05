@@ -1,0 +1,10 @@
+workflow-aggregator:596.v02906771113f
+git:5.4.1
+git-client:5.0.0
+credentials:1371.vfee6b_095f0a_3
+credentials-binding:681.vf91669a_32e45
+pipeline-utility-steps:2.16.2
+ssh-agent:333.v878b_53c89463
+docker-workflow:580.vc0c340686b_54
+mailer:472.vf7c289a_4b_420
+email-ext:701.ve3b_562c5b_5f9

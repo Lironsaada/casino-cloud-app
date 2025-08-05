@@ -1,0 +1,94 @@
+jenkins:
+  numExecutors: 2
+  quietPeriod: 0
+  securityRealm:
+    local:
+      allowsSignup: false
+      users:
+        - id: admin
+          password: ${JENKINS_ADMIN_PASSWORD:-admin123}
+  authorizationStrategy:
+    globalMatrix:
+      permissions:
+        - "Overall/Administer:admin"
+        - "Overall/Read:authenticated"
+
+credentials:
+  system:
+    domainCredentials:
+      - credentials:
+          - usernamePassword:
+              scope: GLOBAL
+              id: dockerhub-creds
+              username: ${DOCKERHUB_USERNAME}
+              password: ${DOCKERHUB_PASSWORD}
+              description: "Docker Hub credentials"
+          - file:
+              scope: GLOBAL
+              id: kubeconfig-yourcluster
+              fileName: kubeconfig
+              secretBytes: ${KUBECONFIG_FILE}
+              description: "Kubernetes config file"
+          - usernamePassword:
+              scope: GLOBAL
+              id: git-creds
+              username: ${GIT_USERNAME}
+              password: ${GIT_TOKEN}
+              description: "Git PAT credentials"
+
+jobs:
+  - script: |
+      // Create main multibranch pipeline
+      multibranchPipelineJob('casino-app-pipeline') {
+        displayName('Casino App CI/CD Pipeline')
+        description('Automated CI/CD pipeline for the casino cloud application')
+        
+        branchSources {
+          git {
+            id('casino-app-repo')
+            remote('https://github.com/your-username/casino-cloud-app.git')
+            credentialsId('git-creds')
+            includes('*')
+          }
+        }
+        
+        factory {
+          workflowBranchProjectFactory {
+            scriptPath('Jenkinsfile')
+          }
+        }
+        
+        orphanedItemStrategy {
+          discardOldItems {
+            daysToKeep(30)
+            numToKeep(-1)
+          }
+        }
+        
+        properties {
+          disableConcurrentBuilds()
+        }
+      }
+      
+      // Create seed pipeline
+      pipelineJob('seed-pipeline') {
+        description('Seed job to create additional pipelines')
+        definition {
+          cps {
+            script('''
+              node {
+                stage('Checkout') {
+                  git branch: 'main', url: 'https://github.com/your-username/casino-cloud-app.git'
+                }
+                stage('Create Jobs') {
+                  jobDsl targets: 'jenkins/jobs/seed-job.groovy',
+                         removedJobAction: 'IGNORE',
+                         removedViewAction: 'IGNORE',
+                         lookupStrategy: 'SEED_JOB'
+                }
+              }
+            ''')
+            sandbox(true)
+          }
+        }
+      }

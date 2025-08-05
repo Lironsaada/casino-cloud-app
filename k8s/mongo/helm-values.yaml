@@ -1,0 +1,22 @@
+auth:
+  enabled: true
+  rootUser: admin
+  rootPassword: mongodb-root-password
+  username: casino
+  password: casino-password
+  database: casino
+
+persistence:
+  enabled: true
+  size: 8Gi
+  storageClass: ""
+
+resources:
+  limits:
+    cpu: 500m
+    memory: 512Mi
+  requests:
+    cpu: 250m
+    memory: 256Mi
+
+replicaCount: 1

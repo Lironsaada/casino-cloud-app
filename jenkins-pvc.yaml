@@ -1,0 +1,36 @@
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  annotations:
+    meta.helm.sh/release-name: casino-jenkins
+    meta.helm.sh/release-namespace: jenkins
+    pv.kubernetes.io/bind-completed: "yes"
+    pv.kubernetes.io/bound-by-controller: "yes"
+    volume.beta.kubernetes.io/storage-provisioner: docker.io/hostpath
+    volume.kubernetes.io/storage-provisioner: docker.io/hostpath
+  creationTimestamp: "2025-08-04T12:15:19Z"
+  finalizers:
+  - kubernetes.io/pvc-protection
+  labels:
+    app.kubernetes.io/instance: casino-jenkins
+    app.kubernetes.io/managed-by: Helm
+    app.kubernetes.io/name: jenkins
+    app.kubernetes.io/version: 2.516.1
+    helm.sh/chart: jenkins-0.1.0
+  name: casino-jenkins-pvc
+  namespace: casinops
+spec:
+  accessModes:
+  - ReadWriteOnce
+  resources:
+    requests:
+      storage: 5Gi
+  storageClassName: hostpath
+  volumeMode: Filesystem
+  volumeName: pvc-9e706c9c-fcd9-4878-96ee-87ab6e236553
+status:
+  accessModes:
+  - ReadWriteOnce
+  capacity:
+    storage: 5Gi
+  phase: Bound

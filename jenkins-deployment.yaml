@@ -1,0 +1,102 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  annotations:
+    deployment.kubernetes.io/revision: "8"
+    kubectl.kubernetes.io/last-applied-configuration: |
+      {"apiVersion":"apps/v1","kind":"Deployment","metadata":{"annotations":{},"name":"casino-jenkins","namespace":"jenkins"},"spec":{"replicas":1,"selector":{"matchLabels":{"app":"casino-jenkins"}},"template":{"metadata":{"labels":{"app":"casino-jenkins"}},"spec":{"containers":[{"env":[{"name":"JAVA_OPTS","value":"-Djenkins.install.runSetupWizard=false -Djenkins.security.csrf.GlobalCrumbIssuerConfiguration.DISABLE_CSRF_PROTECTION=true"}],"image":"jenkins/jenkins:lts","name":"jenkins","ports":[{"containerPort":8080},{"containerPort":50000}],"volumeMounts":[{"mountPath":"/var/jenkins_home","name":"jenkins-home"},{"mountPath":"/usr/share/jenkins/ref/plugins.txt","name":"jenkins-config","subPath":"plugins.txt"},{"mountPath":"/var/jenkins_home/casc_configs/jenkins.yaml","name":"jenkins-config","subPath":"jenkins.yaml"},{"mountPath":"/usr/share/jenkins/ref/init.groovy.d/create-multibranch-simple.groovy","name":"jenkins-config","subPath":"create-multibranch-simple.groovy"}]}],"volumes":[{"name":"jenkins-home","persistentVolumeClaim":{"claimName":"casino-jenkins-pvc"}},{"configMap":{"name":"jenkins-simple-multibranch"},"name":"jenkins-config"}]}}}}
+  creationTimestamp: "2025-08-05T08:55:27Z"
+  generation: 8
+  name: casino-jenkins
+  namespace: casinops
+spec:
+  progressDeadlineSeconds: 600
+  replicas: 1
+  revisionHistoryLimit: 10
+  selector:
+    matchLabels:
+      app: casino-jenkins
+  strategy:
+    rollingUpdate:
+      maxSurge: 25%
+      maxUnavailable: 25%
+    type: RollingUpdate
+  template:
+    metadata:
+      annotations:
+        kubectl.kubernetes.io/restartedAt: "2025-08-05T15:31:39+03:00"
+      creationTimestamp: null
+      labels:
+        app: casino-jenkins
+    spec:
+      containers:
+      - env:
+        - name: JAVA_OPTS
+          value: -Djenkins.install.runSetupWizard=false -Djenkins.security.csrf.GlobalCrumbIssuerConfiguration.DISABLE_CSRF_PROTECTION=true
+            -Dhudson.security.csrf.GlobalCrumbIssuerConfiguration.DISABLE_CSRF_PROTECTION=true
+            -Djenkins.CLI.disabled=false
+        - name: JENKINS_OPTS
+          value: --httpPort=8080
+        - name: CASC_JENKINS_CONFIG
+          value: /var/jenkins_home/casc_configs
+        image: jenkins/jenkins:lts
+        imagePullPolicy: IfNotPresent
+        name: jenkins
+        ports:
+        - containerPort: 8080
+          protocol: TCP
+        - containerPort: 50000
+          protocol: TCP
+        resources: {}
+        terminationMessagePath: /dev/termination-log
+        terminationMessagePolicy: File
+        volumeMounts:
+        - mountPath: /var/jenkins_home
+          name: jenkins-home
+        - mountPath: /usr/share/jenkins/ref/plugins.txt
+          name: jenkins-config
+          subPath: plugins.txt
+        - mountPath: /var/jenkins_home/casc_configs/jenkins.yaml
+          name: jenkins-config
+          subPath: jenkins.yaml
+        - mountPath: /usr/share/jenkins/ref/init.groovy.d/01-wait-for-plugins.groovy
+          name: jenkins-config
+          subPath: 01-wait-for-plugins.groovy
+        - mountPath: /usr/share/jenkins/ref/init.groovy.d/02-create-multibranch-job.groovy
+          name: jenkins-config
+          subPath: 02-create-multibranch-job.groovy
+        - mountPath: /usr/share/jenkins/ref/init.groovy.d/create-multibranch-simple.groovy
+          name: jenkins-config
+          subPath: create-multibranch-simple.groovy
+      dnsPolicy: ClusterFirst
+      restartPolicy: Always
+      schedulerName: default-scheduler
+      securityContext: {}
+      terminationGracePeriodSeconds: 30
+      volumes:
+      - name: jenkins-home
+        persistentVolumeClaim:
+          claimName: casino-jenkins-pvc
+      - configMap:
+          defaultMode: 420
+          name: jenkins-final-working
+        name: jenkins-config
+status:
+  availableReplicas: 1
+  conditions:
+  - lastTransitionTime: "2025-08-05T09:00:02Z"
+    lastUpdateTime: "2025-08-05T09:00:02Z"
+    message: Deployment has minimum availability.
+    reason: MinimumReplicasAvailable
+    status: "True"
+    type: Available
+  - lastTransitionTime: "2025-08-05T08:55:27Z"
+    lastUpdateTime: "2025-08-05T12:31:41Z"
+    message: ReplicaSet "casino-jenkins-5d8dc9795b" has successfully progressed.
+    reason: NewReplicaSetAvailable
+    status: "True"
+    type: Progressing
+  observedGeneration: 8
+  readyReplicas: 1
+  replicas: 1
+  updatedReplicas: 1

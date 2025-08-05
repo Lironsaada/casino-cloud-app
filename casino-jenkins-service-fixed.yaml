@@ -1,0 +1,22 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: casino-jenkins
+  namespace: casinops
+  labels:
+    app: casino-jenkins
+spec:
+  type: NodePort
+  ports:
+  - name: http
+    port: 8080
+    targetPort: 8080
+    nodePort: 30081
+    protocol: TCP
+  - name: agent
+    port: 50000
+    targetPort: 50000
+    nodePort: 30606
+    protocol: TCP
+  selector:
+    app: casino-jenkins

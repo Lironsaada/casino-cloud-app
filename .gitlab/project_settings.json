@@ -1,0 +1,42 @@
+{
+  "name": "casino-cloud-app",
+  "description": "Casino Cloud Application with DevOps Pipeline",
+  "visibility": "private",
+  "default_branch": "main",
+  "repository_access_level": "enabled",
+  "merge_requests_access_level": "enabled",
+  "builds_access_level": "enabled",
+  "wiki_access_level": "disabled",
+  "snippets_access_level": "disabled",
+  "container_registry_enabled": true,
+  "shared_runners_enabled": true,
+  "public_builds": false,
+  "merge_method": "merge",
+  "only_allow_merge_if_pipeline_succeeds": true,
+  "only_allow_merge_if_all_discussions_are_resolved": true,
+  "remove_source_branch_after_merge": true,
+  "merge_requests_template": "",
+  "issues_template": "",
+  "repository_storage": "default",
+  "approvals_before_merge": 1,
+  "mirror": false,
+  "mirror_trigger_builds": false,
+  "protected_branches": [
+    {
+      "name": "main",
+      "push_access_levels": [
+        {
+          "access_level": 40,
+          "access_level_description": "Maintainers"
+        }
+      ],
+      "merge_access_levels": [
+        {
+          "access_level": 40,
+          "access_level_description": "Maintainers"
+        }
+      ],
+      "allow_force_push": false
+    }
+  ]
+}

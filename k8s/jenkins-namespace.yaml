@@ -1,0 +1,38 @@
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: jenkins
+  labels:
+    name: jenkins
+    app: casino-jenkins
+    environment: development
+  annotations:
+    description: "Namespace for Jenkins CI/CD pipeline"
+---
+apiVersion: v1
+kind: ResourceQuota
+metadata:
+  name: jenkins-resource-quota
+  namespace: jenkins
+spec:
+  hard:
+    requests.cpu: "2"
+    requests.memory: 4Gi
+    limits.cpu: "4"
+    limits.memory: 8Gi
+    persistentvolumeclaims: "2"
+---
+apiVersion: v1
+kind: LimitRange
+metadata:
+  name: jenkins-limit-range
+  namespace: jenkins
+spec:
+  limits:
+    - default:
+        cpu: "1000m"
+        memory: 2Gi
+      defaultRequest:
+        cpu: "100m"
+        memory: 256Mi
+      type: Container
