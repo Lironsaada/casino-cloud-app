@@ -1,0 +1,18 @@
+# SCM Polling Fix Verification
+
+**Test ID**: SCM-FIX-VERIFY-$(date +%Y%m%d-%H%M%S)
+**Timestamp**: $(date)
+**Status**: Constructor error FIXED ✅
+
+## Changes Applied
+- Fixed DefaultOrphanedItemStrategy constructor
+- Parameters: (true, "30", "10") ✅ 
+- ConfigMap redeployed
+- Jenkins pod restarted
+
+## Expected Result
+- Branch discovery should complete within 2-3 minutes
+- SCM polling should detect this change within 1 minute
+- Build should trigger automatically with "Started by SCM change"
+
+**Monitor**: http://localhost:30081/job/casino-app/
