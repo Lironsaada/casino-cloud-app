@@ -15,6 +15,7 @@ This file is created to test the Jenkins multibranch pipeline.
 4. ⛵ Helm Validation
 
 ## Test Status
-- Status: TESTING
-- Trigger: Git push to jenkins branch
-- Expected Duration: ~45-60 seconds
+- Status: FINAL SCM POLLING TEST ⚡
+- Trigger: Git push to jenkins branch  
+- SCM Polling: 1-minute interval
+- Expected: Build within 60 seconds
