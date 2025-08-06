@@ -405,7 +405,7 @@ EOF
                 script {
                     echo "Preparing GitOps deployment for dev environment..."
                     
-                    withCredentials([string(credentialsId: 'git-creds', variable: 'GIT_TOKEN')]) {
+                    withCredentials([usernamePassword(credentialsId: 'git-creds', usernameVariable: 'GIT_USERNAME', passwordVariable: 'GIT_TOKEN')]) {
                         sh """
                             echo "🔄 PIPE-03: GitOps CD Pipeline"
                             echo "============================================"
