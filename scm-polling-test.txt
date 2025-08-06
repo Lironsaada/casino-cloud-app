@@ -1,1 +1,14 @@
-SCM polling test 2025-08-06 22:16:39
+SCM Polling Test - 2025-08-06 20:45:30
+
+Testing automatic build triggering after Jenkins restart:
+✅ Cleared corrupted git cache directories
+✅ Configured git safe.directory globally  
+✅ Restarted Jenkins pod for clean state
+✅ PAT credentials should be working (updated in UI)
+
+Expected result: 
+- This commit should trigger SCM polling within 1-2 minutes
+- Jenkins should discover all branches and start builds automatically
+- No "fatal: not in a git directory" errors should occur
+
+Test branch: jenkins
