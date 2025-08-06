@@ -34,19 +34,32 @@ pipeline {
             }
         }
         
-        // PIPE-01 & PIPE-02: Docker Build (Simulated)
+        // PIPE-01 & PIPE-02: Docker Build
         stage('🐳 Docker Build') {
             steps {
                 script {
                     echo "Building Docker image: ${env.DOCKER_IMAGE}:${env.IMAGE_TAG}"
                     
                     sh """
-                        echo "🐳 Docker Build Simulation (Docker not available in Jenkins pod)"
-                        echo "Would build: docker build -t ${env.DOCKER_IMAGE}:${env.IMAGE_TAG} ."
-                        echo "Image would be tagged as: ${env.DOCKERHUB_REPO}/${env.DOCKER_IMAGE}:${env.IMAGE_TAG}"
-                        echo "✅ Docker build simulation completed successfully"
+                        # Use Docker from shared tools
+                        export PATH="/shared:\$PATH"
                         
-                        # Create a build manifest as proof of concept
+                        echo "🐳 Starting Docker Build"
+                        echo "Docker version: \$(/shared/docker --version)"
+                        
+                        # Build the Docker image
+                        /shared/docker build -t ${env.DOCKER_IMAGE}:${env.IMAGE_TAG} .
+                        
+                        # Tag for DockerHub
+                        /shared/docker tag ${env.DOCKER_IMAGE}:${env.IMAGE_TAG} ${env.DOCKERHUB_REPO}/${env.DOCKER_IMAGE}:${env.IMAGE_TAG}
+                        /shared/docker tag ${env.DOCKER_IMAGE}:${env.IMAGE_TAG} ${env.DOCKERHUB_REPO}/${env.DOCKER_IMAGE}:latest
+                        
+                        echo "✅ Docker build completed successfully"
+                        echo "📦 Built image: ${env.DOCKER_IMAGE}:${env.IMAGE_TAG}"
+                        echo "🏷️  Tagged as: ${env.DOCKERHUB_REPO}/${env.DOCKER_IMAGE}:${env.IMAGE_TAG}"
+                        echo "🏷️  Tagged as: ${env.DOCKERHUB_REPO}/${env.DOCKER_IMAGE}:latest"
+                        
+                        # Create build manifest
                         cat > docker-build-manifest.txt << EOF
 Docker Build Configuration:
 ===========================
@@ -60,7 +73,11 @@ Build Timestamp: ${env.BUILD_TIMESTAMP}
 Dockerfile present: \$(test -f Dockerfile && echo "✅ YES" || echo "❌ NO")
 Requirements present: \$(test -f requirements.txt && echo "✅ YES" || echo "❌ NO")
 
-Build Status: SIMULATED SUCCESS
+Build Status: SUCCESS
+Docker Version: \$(/shared/docker --version)
+Images Created:
+- ${env.DOCKERHUB_REPO}/${env.DOCKER_IMAGE}:${env.IMAGE_TAG}
+- ${env.DOCKERHUB_REPO}/${env.DOCKER_IMAGE}:latest
 EOF
                         cat docker-build-manifest.txt
                     """
@@ -166,57 +183,23 @@ EOF
                             echo "✅ Helm chart found at ${env.HELM_CHART_PATH}"
                             ls -la ${env.HELM_CHART_PATH}/
                             
-                            # Check if helm command is available
-                            if command -v helm >/dev/null 2>&1; then
-                                echo "✅ Helm CLI available: \$(helm version --short)"
+                            # Use Helm from shared tools
+                            export PATH="/shared:\$PATH"
+                            echo "✅ Helm CLI available: \$(/shared/helm version --short)"
+                            
+                            # Helm lint
+                            echo "🔍 Running Helm lint..."
+                            /shared/helm lint ${env.HELM_CHART_PATH} || echo "⚠️  Helm lint warnings found (continuing)"
+                            
+                            # Helm template validation
+                            echo "🔍 Running Helm template validation..."
+                            /shared/helm template test-release ${env.HELM_CHART_PATH} \\
+                                --set image.repository=${env.DOCKERHUB_REPO}/${env.DOCKER_IMAGE} \\
+                                --set image.tag=${env.IMAGE_TAG} \\
+                                --dry-run > helm-output.yaml
                                 
-                                # Helm lint
-                                echo "🔍 Running Helm lint..."
-                                helm lint ${env.HELM_CHART_PATH} || echo "⚠️  Helm lint warnings found (continuing)"
-                                
-                                # Helm template validation
-                                echo "🔍 Running Helm template validation..."
-                                helm template test-release ${env.HELM_CHART_PATH} \\
-                                    --set image.repository=${env.DOCKERHUB_REPO}/${env.DOCKER_IMAGE} \\
-                                    --set image.tag=${env.IMAGE_TAG} \\
-                                    --dry-run > helm-output.yaml
-                                    
-                                echo "📄 Helm template output preview:"
-                                head -20 helm-output.yaml
-                                
-                            else
-                                echo "⚠️  Helm CLI not available, simulating validation"
-                                
-                                # Create simulated helm output
-                                cat > helm-output.yaml << EOF
-# Simulated Helm Template Output for ${env.DOCKER_IMAGE}:${env.IMAGE_TAG}
-apiVersion: v1
-kind: Service
-metadata:
-  name: casino-app
-spec:
-  ports:
-  - port: 80
-    targetPort: 5000
----
-apiVersion: apps/v1
-kind: Deployment
-metadata:
-  name: casino-app
-spec:
-  replicas: 2
-  selector:
-    matchLabels:
-      app: casino-app
-  template:
-    spec:
-      containers:
-      - name: casino-app
-        image: ${env.DOCKERHUB_REPO}/${env.DOCKER_IMAGE}:${env.IMAGE_TAG}
-        ports:
-        - containerPort: 5000
-EOF
-                            fi
+                            echo "📄 Helm template output preview:"
+                            head -20 helm-output.yaml
                         else
                             echo "⚠️  Helm chart not found at ${env.HELM_CHART_PATH}, creating placeholder"
                             echo "# Placeholder Helm validation output" > helm-output.yaml
@@ -248,9 +231,10 @@ EOF
                         
                         mkdir -p helm-packages
                         
-                        if [ -d "${env.HELM_CHART_PATH}" ] && command -v helm >/dev/null 2>&1; then
+                        if [ -d "${env.HELM_CHART_PATH}" ]; then
                             echo "✅ Creating real Helm package"
-                            helm package ${env.HELM_CHART_PATH} \\
+                            export PATH="/shared:\$PATH"
+                            /shared/helm package ${env.HELM_CHART_PATH} \\
                                 --version ${env.BUILD_NUMBER} \\
                                 --app-version ${env.IMAGE_TAG} \\
                                 --destination helm-packages/
@@ -296,24 +280,27 @@ EOF
                                                     usernameVariable: 'DOCKER_USERNAME', 
                                                     passwordVariable: 'DOCKER_PASSWORD')]) {
                         sh """
-                            echo "🚀 Docker Push Simulation"
+                            echo "🚀 Docker Push to DockerHub"
                             echo "Username: \$DOCKER_USERNAME"
                             echo "Token: [REDACTED - Length: \${#DOCKER_PASSWORD}]"
                             
-                            # Simulate docker login and push
-                            echo "🔐 Simulating DockerHub login..."
-                            echo "✅ Login successful (simulated)"
+                            # Use Docker from shared tools
+                            export PATH="/shared:\$PATH"
                             
-                            echo "🏷️  Simulating image tagging..."
-                            echo "   Local: ${env.DOCKER_IMAGE}:${env.IMAGE_TAG}"
-                            echo "   Remote: ${env.DOCKERHUB_REPO}/${env.DOCKER_IMAGE}:${env.IMAGE_TAG}"
-                            echo "   Latest: ${env.DOCKERHUB_REPO}/${env.DOCKER_IMAGE}:latest"
+                            # Docker login
+                            echo "🔐 Logging into DockerHub..."
+                            echo "\$DOCKER_PASSWORD" | /shared/docker login --username "\$DOCKER_USERNAME" --password-stdin
+                            echo "✅ Login successful"
                             
-                            echo "📤 Simulating image push..."
+                            # Push images
+                            echo "📤 Pushing Docker images..."
                             echo "   Pushing ${env.DOCKERHUB_REPO}/${env.DOCKER_IMAGE}:${env.IMAGE_TAG}..."
-                            echo "   ✅ Push successful (simulated)"
+                            /shared/docker push ${env.DOCKERHUB_REPO}/${env.DOCKER_IMAGE}:${env.IMAGE_TAG}
+                            echo "   ✅ Push successful: ${env.DOCKERHUB_REPO}/${env.DOCKER_IMAGE}:${env.IMAGE_TAG}"
+                            
                             echo "   Pushing ${env.DOCKERHUB_REPO}/${env.DOCKER_IMAGE}:latest..."
-                            echo "   ✅ Push successful (simulated)"
+                            /shared/docker push ${env.DOCKERHUB_REPO}/${env.DOCKER_IMAGE}:latest
+                            echo "   ✅ Push successful: ${env.DOCKERHUB_REPO}/${env.DOCKER_IMAGE}:latest"
                             
                             # Create push manifest
                             cat > docker-push-manifest.txt << EOF
@@ -358,19 +345,30 @@ EOF
                         sh """
                             echo "📦 Helm OCI Push Simulation"
                             
-                            # Simulate Helm OCI push
-                            echo "🔐 Simulating Helm registry login..."
-                            echo "✅ Registry login successful (simulated)"
+                            # Use Helm from shared tools
+                            export PATH="/shared:\$PATH"
+                            
+                            # Helm OCI registry login
+                            echo "🔐 Logging into Helm OCI registry..."
+                            echo "\$DOCKER_PASSWORD" | /shared/helm registry login registry-1.docker.io --username "\$DOCKER_USERNAME" --password-stdin
+                            echo "✅ Registry login successful"
                             
                             if ls helm-packages/*.tgz >/dev/null 2>&1; then
                                 HELM_PACKAGE=\$(ls helm-packages/*.tgz | head -1)
                                 echo "📤 Found Helm package: \$HELM_PACKAGE"
-                                echo "🚀 Simulating push to oci://docker.io/${env.DOCKERHUB_REPO}/helm"
-                                echo "✅ Helm chart push successful (simulated)"
+                                echo "🚀 Pushing to oci://registry-1.docker.io/${env.DOCKERHUB_REPO}"
+                                /shared/helm push "\$HELM_PACKAGE" oci://registry-1.docker.io/${env.DOCKERHUB_REPO}
+                                echo "✅ Helm chart push successful"
                             else
-                                echo "📤 Simulating Helm package push (no .tgz found)"
-                                echo "🚀 Would push to: oci://docker.io/${env.DOCKERHUB_REPO}/helm"
-                                echo "✅ Helm chart push simulated successfully"
+                                echo "⚠️  No Helm package found - creating fallback package"
+                                /shared/helm package ${env.HELM_CHART_PATH} \\
+                                    --version ${env.BUILD_NUMBER} \\
+                                    --app-version ${env.IMAGE_TAG} \\
+                                    --destination helm-packages/
+                                HELM_PACKAGE=\$(ls helm-packages/*.tgz | head -1)
+                                echo "🚀 Pushing to oci://registry-1.docker.io/${env.DOCKERHUB_REPO}"
+                                /shared/helm push "\$HELM_PACKAGE" oci://registry-1.docker.io/${env.DOCKERHUB_REPO}
+                                echo "✅ Helm chart push successful"
                             fi
                             
                             # Create helm push manifest
@@ -528,11 +526,22 @@ EOF
                             echo "   MongoDB: Enabled (no auth for dev)"
                             echo ""
                             
-                            # Check if ArgoCD is available
+                            # Check if ArgoCD is available using kubectl from shared tools
                             echo "🎯 Checking ArgoCD availability..."
-                            if kubectl get namespace argocd >/dev/null 2>&1; then
+                            export PATH="/shared:\$PATH"
+                            
+                            if /shared/kubectl get namespace argocd >/dev/null 2>&1; then
                                 echo "✅ ArgoCD namespace found - deployment can proceed"
                                 echo "🔗 ArgoCD UI: kubectl port-forward svc/argocd-server -n argocd 8080:443"
+                                
+                                # Apply the ArgoCD application
+                                echo "🚀 Applying ArgoCD application..."
+                                /shared/kubectl apply -f gitops-manifests/argocd-application.yaml
+                                echo "✅ ArgoCD application applied successfully"
+                                
+                                # Check application status
+                                echo "📊 Checking ArgoCD application status..."
+                                /shared/kubectl get application casino-app-dev -n argocd -o yaml | grep -A5 -B5 "status:" || echo "Application created, status pending..."
                             else
                                 echo "⚠️  ArgoCD not installed - manifests prepared for manual deployment"
                                 echo "📝 To deploy manually:"
@@ -598,10 +607,18 @@ EOF
                 echo "   - helm-output.yaml"
                 echo "========================="
                 
-                // Simple cleanup without Docker
+                // Cleanup with Docker logout
                 sh """
                     echo "🧹 Cleaning up workspace..."
                     rm -f /tmp/unified-jenkinsfile || true
+                    
+                    # Docker cleanup if available
+                    if [ -f /shared/docker ]; then
+                        echo "🐳 Cleaning up Docker..."
+                        /shared/docker logout || true
+                        /shared/docker system prune -f || true
+                    fi
+                    
                     echo "✅ Cleanup completed"
                 """
             }
