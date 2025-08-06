@@ -1,5 +1,7 @@
 # Casino Cloud App
 
+> **🧪 PIPELINE TESTING ACTIVE** - jenkins branch testing in progress
+
 ## Bootstrap Commands
 
 ```bash
