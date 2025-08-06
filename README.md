@@ -1,6 +1,6 @@
 # Casino Cloud App
 
-> **🧪 PIPELINE TESTING ACTIVE** - jenkins branch testing in progress
+> **⚡ SCM POLLING TEST ACTIVE** - verifying 1-minute automatic build triggers
 
 ## Bootstrap Commands
 

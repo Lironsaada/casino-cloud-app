@@ -1,0 +1,19 @@
+# SCM Polling Verification Test
+
+**Test ID**: SCM-POLL-$(date +%Y%m%d-%H%M%S)
+**Timestamp**: $(date)
+**Branch**: jenkins
+**Purpose**: Verify 1-minute SCM polling triggers builds automatically
+
+## Test Details
+- ⏰ SCM polling configured for every 1 minute
+- 🔄 No webhooks - pure polling mechanism  
+- 🎯 Expected: Build trigger within 60 seconds of push
+- 📊 Monitoring: http://localhost:30081/job/casino-app/job/jenkins/
+
+## Expected Result
+Jenkins should detect this change and trigger a new build automatically within 1 minute.
+Build cause should show: "Started by SCM change"
+
+---
+*This file will be deleted after successful verification*
