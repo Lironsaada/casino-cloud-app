@@ -1,0 +1,23 @@
+# Production Pipeline Test
+
+**Test ID**: PROD-PIPELINE-20250806-175709
+**Timestamp**: Wed Aug  6 17:57:09 IDT 2025
+**Purpose**: Verify production CI/CD with real Docker and Helm
+
+## Expected Production Features
+- ✅ Real Docker builds (not simulation)
+- ✅ Real pytest execution in containers
+- ✅ Real Helm lint, template, package
+- ✅ Real DockerHub push (for main branch)
+- ✅ Real Helm OCI push (for main branch)  
+- ✅ Real GitOps updates (for main branch)
+
+## Pipeline Types
+- PIPE-01: Feature branches (Docker build + test + Helm validate)
+- PIPE-02: Main branch (Full CI/CD with pushes)
+- PIPE-03: Main branch (GitOps ArgoCD integration)
+
+Monitor: http://localhost:30081/job/casino-app/
+
+---
+*This test will verify the production pipeline works with real commands*
