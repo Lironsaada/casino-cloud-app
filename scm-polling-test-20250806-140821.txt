@@ -1,0 +1,2 @@
+SCM Polling Test - Wed Aug  6 14:08:21 IDT 2025
+This file tests whether Jenkins SCM polling detects changes within 1 minute.
