@@ -28,6 +28,7 @@ pipeline {
                     echo "Build: ${env.BUILD_NUMBER}"
                     echo "Image Tag: ${env.IMAGE_TAG}"
                     echo "Docker Repo: ${env.DOCKERHUB_REPO}/${env.DOCKER_IMAGE}"
+                    echo "Test Trigger: $(date)"
                     echo "================================"
                 }
             }
@@ -405,7 +406,7 @@ EOF
                 script {
                     echo "Preparing GitOps deployment for dev environment..."
                     
-                    withCredentials([string(credentialsId: 'git-creds', variable: 'GIT_TOKEN')]) {
+                    withCredentials([usernamePassword(credentialsId: 'git-creds', usernameVariable: 'GIT_USERNAME', passwordVariable: 'GIT_TOKEN')]) {
                         sh """
                             echo "🔄 PIPE-03: GitOps CD Pipeline"
                             echo "============================================"
