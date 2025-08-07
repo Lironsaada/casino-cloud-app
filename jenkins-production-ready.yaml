@@ -1,0 +1,410 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: jenkins-production
+  namespace: default
+  labels:
+    app: jenkins-production
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: jenkins-production
+  template:
+    metadata:
+      labels:
+        app: jenkins-production
+    spec:
+      serviceAccountName: jenkins-production
+      securityContext:
+        runAsUser: 0  # Required for Docker-in-Docker
+        fsGroup: 0
+      initContainers:
+      - name: install-plugins
+        image: jenkins/jenkins:lts
+        securityContext:
+          runAsUser: 0
+        command:
+        - /bin/bash
+        - -c
+        - |
+          set -e
+          echo "🔧 Installing Jenkins plugins..."
+          
+          # Copy plugins.txt to the right location
+          cp /tmp/plugins/plugins.txt /usr/share/jenkins/ref/plugins.txt
+          
+          # Install plugins using the standard Jenkins mechanism
+          jenkins-plugin-cli --plugin-file /usr/share/jenkins/ref/plugins.txt --verbose
+          
+          # Verify critical plugins were installed
+          echo "✅ Plugin installation completed!"
+          echo "📋 Installed plugins:"
+          ls -la /usr/share/jenkins/ref/plugins/*.jpi | wc -l
+          
+        volumeMounts:
+        - name: jenkins-home
+          mountPath: /var/jenkins_home
+        - name: jenkins-plugins
+          mountPath: /tmp/plugins
+      - name: install-tools
+        image: alpine:3.18
+        securityContext:
+          runAsUser: 0
+        command:
+        - /bin/sh
+        - -c
+        - |
+          set -e
+          echo "🔧 Installing Docker CLI, Helm, kubectl, and Python tools..."
+          
+          # Install dependencies
+          apk add --no-cache curl wget bash python3 py3-pip
+          
+          # Install Docker CLI
+          DOCKER_VERSION="27.3.1"
+          wget -O docker.tgz "https://download.docker.com/linux/static/stable/x86_64/docker-${DOCKER_VERSION}.tgz"
+          tar -xzf docker.tgz --strip-components=1 -C /usr/local/bin/ docker/docker
+          chmod +x /usr/local/bin/docker
+          cp /usr/local/bin/docker /shared/docker
+          
+          # Install Helm
+          HELM_VERSION="v3.16.2"
+          wget -O helm.tar.gz "https://get.helm.sh/helm-${HELM_VERSION}-linux-amd64.tar.gz"
+          tar -xzf helm.tar.gz
+          cp linux-amd64/helm /shared/helm
+          chmod +x /shared/helm
+          
+          # Install kubectl
+          KUBECTL_VERSION="v1.31.2"
+          wget -O kubectl "https://dl.k8s.io/release/${KUBECTL_VERSION}/bin/linux/amd64/kubectl"
+          chmod +x kubectl
+          cp kubectl /shared/kubectl
+          
+          # Install pytest and requirements
+          pip3 install --break-system-packages pytest pytest-html requests flask gunicorn
+          
+          # Copy Python tools
+          cp /usr/bin/python3 /shared/python3
+          cp /usr/bin/pip3 /shared/pip3
+          find /usr/lib/python3* -name pytest -type f -executable | head -1 | xargs -I {} cp {} /shared/pytest || echo "pytest not found, will install in container"
+          
+          # Verify installations
+          echo "✅ Tools installed:"
+          /shared/docker --version
+          /shared/helm version --client
+          /shared/kubectl version --client
+          python3 --version
+          
+          echo "🎉 Tool installation completed!"
+        volumeMounts:
+        - name: shared-tools
+          mountPath: /shared
+      containers:
+      - name: jenkins
+        image: jenkins/jenkins:lts
+        imagePullPolicy: Always
+        ports:
+        - containerPort: 8080
+          name: http-port
+        - containerPort: 50000
+          name: jnlp-port
+        env:
+        - name: JENKINS_OPTS
+          value: "--httpPort=8080"
+        - name: JAVA_OPTS
+          value: "-Xmx2048m -Dhudson.plugins.git.GitSCM.ALLOW_LOCAL_CHECKOUT=true -Djenkins.install.runSetupWizard=false"
+        - name: DOCKER_HOST
+          value: "tcp://localhost:2376"
+        - name: DOCKER_TLS_CERTDIR
+          value: "/certs"
+        - name: DOCKER_TLS_VERIFY
+          value: "1"
+        - name: DOCKER_CERT_PATH
+          value: "/certs/client"
+        - name: CASC_JENKINS_CONFIG
+          value: /var/jenkins_home/casc_configs
+        - name: JENKINS_ADMIN_ID
+          value: admin
+        - name: JENKINS_ADMIN_PASSWORD
+          value: admin123
+        volumeMounts:
+        - name: jenkins-home
+          mountPath: /var/jenkins_home
+        - name: jenkins-config
+          mountPath: /var/jenkins_home/casc_configs
+        - name: docker-certs
+          mountPath: /certs
+        - name: shared-tools
+          mountPath: /shared
+        resources:
+          requests:
+            memory: "1Gi"
+            cpu: "500m"
+          limits:
+            memory: "4Gi"
+            cpu: "2000m"
+        livenessProbe:
+          httpGet:
+            path: /login
+            port: 8080
+          initialDelaySeconds: 120
+          periodSeconds: 30
+          timeoutSeconds: 10
+        readinessProbe:
+          httpGet:
+            path: /login
+            port: 8080
+          initialDelaySeconds: 60
+          periodSeconds: 10
+          timeoutSeconds: 10
+        
+      # Docker-in-Docker sidecar container
+      - name: docker-dind
+        image: docker:27-dind
+        securityContext:
+          privileged: true
+        env:
+        - name: DOCKER_TLS_CERTDIR
+          value: "/certs"
+        - name: DOCKER_DRIVER
+          value: "overlay2"
+        ports:
+        - containerPort: 2376
+          name: docker-daemon
+        volumeMounts:
+        - name: docker-certs
+          mountPath: /certs
+        - name: docker-storage
+          mountPath: /var/lib/docker
+        resources:
+          requests:
+            memory: "512Mi"
+            cpu: "250m"
+          limits:
+            memory: "2Gi"
+            cpu: "1000m"
+            
+      volumes:
+      - name: jenkins-home
+        persistentVolumeClaim:
+          claimName: jenkins-production-pvc
+      - name: jenkins-config
+        configMap:
+          name: jenkins-production-config
+          defaultMode: 420
+      - name: jenkins-plugins
+        configMap:
+          name: jenkins-production-plugins
+          defaultMode: 420
+      - name: docker-certs
+        emptyDir: {}
+      - name: docker-storage
+        emptyDir:
+          sizeLimit: 20Gi
+      - name: shared-tools
+        emptyDir: {}
+
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: jenkins-production-pvc
+  namespace: default
+spec:
+  accessModes:
+    - ReadWriteOnce
+  resources:
+    requests:
+      storage: 10Gi
+
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: jenkins-production
+  namespace: default
+spec:
+  selector:
+    app: jenkins-production
+  ports:
+  - name: http
+    port: 8080
+    targetPort: 8080
+  - name: jnlp
+    port: 50000
+    targetPort: 50000
+  type: ClusterIP
+
+---
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: jenkins-production
+  namespace: default
+
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  name: jenkins-production-cluster-role
+rules:
+- apiGroups: [""]
+  resources: ["pods", "services", "endpoints", "persistentvolumeclaims", "events", "configmaps", "secrets"]
+  verbs: ["get", "list", "watch", "create", "update", "patch", "delete"]
+- apiGroups: ["apps"]
+  resources: ["deployments", "daemonsets", "replicasets", "statefulsets"]
+  verbs: ["get", "list", "watch", "create", "update", "patch", "delete"]
+- apiGroups: ["extensions", "networking.k8s.io"]
+  resources: ["ingresses"]
+  verbs: ["get", "list", "watch", "create", "update", "patch", "delete"]
+
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRoleBinding
+metadata:
+  name: jenkins-production-cluster-role-binding
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: ClusterRole
+  name: jenkins-production-cluster-role
+subjects:
+- kind: ServiceAccount
+  name: jenkins-production
+  namespace: default
+
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: jenkins-production-config
+  namespace: default
+data:
+  jenkins.yaml: |
+    jenkins:
+      crumbIssuer: none
+      numExecutors: 2
+      quietPeriod: 0
+      systemMessage: "🚀 Casino App Jenkins - PRODUCTION Ready CI/CD Pipeline"
+      
+      securityRealm:
+        local:
+          allowsSignup: false
+          users:
+          - id: admin
+            password: admin123
+      
+      authorizationStrategy:
+        globalMatrix:
+          permissions:
+          - "Overall/Administer:admin"
+          - "Overall/Read:authenticated"
+          - "Job/Build:authenticated"
+          - "Job/Read:authenticated"
+          - "Job/Create:admin"
+          - "Job/Configure:admin"
+
+    credentials:
+      system:
+        domainCredentials:
+        - credentials:
+          - usernamePassword:
+              scope: GLOBAL
+              id: dockerhub-credentials
+              username: lironsaada
+              password: "dckr_pat_YOUR_TOKEN_HERE"
+              description: "DockerHub credentials for real pushes"
+          - usernamePassword:
+              scope: GLOBAL
+              id: git-creds
+              username: dev-user
+              password: dev-token
+              description: "GitLab PAT credentials"
+
+    security:
+      scriptApproval:
+        approvedSignatures:
+        - "method groovy.lang.GroovyObject invokeMethod java.lang.String java.lang.Object"
+        - "staticMethod org.codehaus.groovy.runtime.DefaultGroovyMethods println java.lang.Object java.lang.Object"
+        - "method jenkins.model.Jenkins getItemByFullName java.lang.String"
+        - "method hudson.model.ItemGroup getItem java.lang.String"
+        - "method hudson.model.Job scheduleBuild int hudson.model.Cause"
+        - "new hudson.model.Cause$UserIdCause"
+        - "staticMethod jenkins.model.Jenkins getInstance"
+
+    unclassified:
+      location:
+        url: "http://jenkins.casino-app.local"
+        adminAddress: "admin@casino-app.com"
+
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: jenkins-production-plugins
+  namespace: default
+data:
+  plugins.txt: |
+    # Core dependencies first (order matters)
+    structs:latest
+    workflow-step-api:latest
+    workflow-scm-step:latest
+    workflow-support:latest
+    
+    # Security and credentials
+    script-security:latest
+    matrix-auth:latest
+    credentials:latest
+    credentials-binding:latest
+    ssh-credentials:latest
+    plain-credentials:latest
+    
+    # Git and SCM
+    scm-api:latest
+    git:latest
+    git-client:latest
+    git-server:latest
+    
+    # Core APIs and utilities
+    mailer:latest
+    display-url-api:latest
+    build-timeout:latest
+    timestamper:latest
+    ws-cleanup:latest
+    ant:latest
+    gradle:latest
+    
+    # Pipeline core
+    workflow-api:latest
+    workflow-basic-steps:latest
+    workflow-cps:latest
+    workflow-cps-global-lib:latest
+    workflow-durable-task-step:latest
+    workflow-job:latest
+    
+    # Branch and folder support (critical for multibranch)
+    branch-api:latest
+    cloudbees-folder:latest
+    
+    # Multibranch workflow (depends on above)
+    workflow-multibranch:latest
+    
+    # Pipeline aggregator (includes most pipeline plugins)
+    workflow-aggregator:latest
+    
+    # Pipeline model
+    pipeline-model-api:latest
+    pipeline-model-definition:latest
+    pipeline-model-extensions:latest
+    pipeline-stage-view:latest
+    
+    # Utility plugins
+    pipeline-utility-steps:latest
+    ssh-agent:latest
+    docker-workflow:latest
+    
+    # Configuration as Code (after core plugins)
+    configuration-as-code:latest
+    
+    # Job DSL (must be last - depends on everything)
+    job-dsl:latest
