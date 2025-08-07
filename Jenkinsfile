@@ -38,26 +38,36 @@ pipeline {
         stage('🐳 Docker Build') {
             steps {
                 script {
+                    echo "🐳 REAL Docker Build Starting..."
                     echo "Building Docker image: ${env.DOCKER_IMAGE}:${env.IMAGE_TAG}"
                     
                     sh """
                         # Use Docker from shared tools
                         export PATH="/shared:\$PATH"
                         
-                        echo "🐳 Starting Docker Build"
-                        echo "Docker version: \$(/shared/docker --version)"
+                        echo "🐳 REAL Docker Build - Not Simulation"
+                        echo "Docker version: \$(/shared/docker --version 2>/dev/null || echo 'Docker CLI not available')"
                         
-                        # Build the Docker image
-                        /shared/docker build -t ${env.DOCKER_IMAGE}:${env.IMAGE_TAG} .
+                        # REAL Docker build
+                        echo "🔨 Building Docker image with real docker build command..."
+                        /shared/docker build -t ${env.DOCKER_IMAGE}:${env.IMAGE_TAG} . || {
+                            echo "❌ Docker build failed!"
+                            exit 1
+                        }
                         
                         # Tag for DockerHub
+                        echo "🏷️  Tagging images for DockerHub..."
                         /shared/docker tag ${env.DOCKER_IMAGE}:${env.IMAGE_TAG} ${env.DOCKERHUB_REPO}/${env.DOCKER_IMAGE}:${env.IMAGE_TAG}
                         /shared/docker tag ${env.DOCKER_IMAGE}:${env.IMAGE_TAG} ${env.DOCKERHUB_REPO}/${env.DOCKER_IMAGE}:latest
                         
-                        echo "✅ Docker build completed successfully"
+                        echo "✅ REAL Docker build completed successfully"
                         echo "📦 Built image: ${env.DOCKER_IMAGE}:${env.IMAGE_TAG}"
                         echo "🏷️  Tagged as: ${env.DOCKERHUB_REPO}/${env.DOCKER_IMAGE}:${env.IMAGE_TAG}"
                         echo "🏷️  Tagged as: ${env.DOCKERHUB_REPO}/${env.DOCKER_IMAGE}:latest"
+                        
+                        # List built images
+                        echo "📋 Docker images:"
+                        /shared/docker images | grep ${env.DOCKER_IMAGE} || echo "No images found"
                         
                         # Create build manifest
                         cat > docker-build-manifest.txt << EOF
@@ -97,68 +107,52 @@ EOF
                     echo "Running pytest unit tests..."
                     
                     sh """
-                        echo "🧪 Starting Unit Tests with pytest"
+                        echo "🧪 REAL Unit Tests - Running pytest"
+                        
+                        # Use Python from shared tools or system
+                        export PATH="/shared:\$PATH"
+                        export PYTHONPATH="\$PWD:\$PYTHONPATH"
                         
                         # Check if python and tests exist
                         if command -v python3 >/dev/null 2>&1; then
                             echo "✅ Python3 available: \$(python3 --version)"
                         else
-                            echo "⚠️  Python3 not available, simulating tests"
+                            echo "❌ Python3 not available!"
+                            exit 1
                         fi
+                        
+                        # Install requirements FIRST
+                        if [ -f "requirements.txt" ]; then
+                            echo "📋 Installing REAL requirements..."
+                            python3 -m pip install -r requirements.txt --user --break-system-packages
+                        else
+                            echo "⚠️  No requirements.txt found, installing basic deps"
+                            python3 -m pip install flask gunicorn pytest pytest-html --user --break-system-packages
+                        fi
+                        
+                        # Install pytest
+                        echo "📋 Installing pytest..."
+                        python3 -m pip install pytest pytest-html --user --break-system-packages
                         
                         # Check if tests directory exists
                         if [ -d "tests" ]; then
                             echo "✅ Tests directory found"
                             ls -la tests/
                         else
-                            echo "⚠️  Tests directory not found, creating sample test results"
-                            mkdir -p tests
-                            echo "def test_sample(): assert True" > tests/test_sample.py
+                            echo "❌ Tests directory not found!"
+                            exit 1
                         fi
                         
-                        # Check if requirements.txt exists
-                        if [ -f "requirements.txt" ]; then
-                            echo "✅ Requirements.txt found"
-                            echo "Dependencies to install:"
-                            head -5 requirements.txt
-                        else
-                            echo "⚠️  No requirements.txt found"
-                        fi
-                        
-                        # Simulate pytest execution
+                        # REAL pytest execution
                         echo ""
-                        echo "🔄 Simulating pytest execution..."
-                        echo "========================== test session starts ==========================="
-                        echo "platform linux -- Python 3.x"
-                        echo "collected 3 items"
-                        echo ""
-                        echo "tests/test_app.py::test_login_page PASSED                          [ 33%]"
-                        echo "tests/test_app.py::test_metrics_endpoint PASSED                   [ 66%]"
-                        echo "tests/test_app.py::test_user_registration PASSED                  [100%]"
-                        echo ""
-                        echo "========================== 3 passed in 2.34s =========================="
+                        echo "🧪 Running REAL pytest execution - NOT SIMULATION!"
+                        python3 -m pytest tests/ -v --html=test-report.html --self-contained-html || {
+                            echo "❌ REAL TESTS FAILED!"
+                            echo "This build will fail because tests failed"
+                            exit 1
+                        }
                         
-                        # Create test report
-                        cat > test-report.html << EOF
-<!DOCTYPE html>
-<html>
-<head><title>Test Report</title></head>
-<body>
-<h1>Casino App Test Report</h1>
-<h2>Build #${env.BUILD_NUMBER}</h2>
-<p><strong>Branch:</strong> ${env.BRANCH_NAME}</p>
-<p><strong>Commit:</strong> ${env.GIT_SHORT_COMMIT}</p>
-<p><strong>Status:</strong> <span style="color: green;">✅ ALL TESTS PASSED</span></p>
-<ul>
-<li>✅ test_login_page</li>
-<li>✅ test_metrics_endpoint</li>
-<li>✅ test_user_registration</li>
-</ul>
-</body>
-</html>
-EOF
-                        
-                        echo "✅ Unit tests simulation completed successfully"
+                        echo "✅ REAL Unit tests completed successfully"
                     """
                 }
             }
@@ -240,20 +234,9 @@ EOF
                                 --destination helm-packages/
                             ls -la helm-packages/
                         else
-                            echo "⚠️  Creating simulated Helm package"
-                            cat > helm-packages/casino-app-${env.BUILD_NUMBER}.txt << EOF
-Helm Package Simulation
-=======================
-Chart Name: casino-app
-Version: ${env.BUILD_NUMBER}
-App Version: ${env.IMAGE_TAG}
-Created: \$(date)
-Build Number: ${env.BUILD_NUMBER}
-Git Commit: ${env.GIT_SHORT_COMMIT}
-
-This would be: casino-app-${env.BUILD_NUMBER}.tgz
-EOF
-                            echo "📦 Simulated package: casino-app-${env.BUILD_NUMBER}.txt"
+                            echo "❌ Helm chart directory not found at ${env.HELM_CHART_PATH}"
+                            echo "Cannot create Helm package without chart directory"
+                            exit 1
                         fi
                         
                         echo "✅ Helm package creation completed"
@@ -312,12 +295,12 @@ Tags Pushed:
   - latest
 Build: ${env.BUILD_NUMBER}
 Timestamp: \$(date)
-Status: SIMULATED SUCCESS
+Status: SUCCESS
 
 URL: https://hub.docker.com/r/${env.DOCKERHUB_REPO}/${env.DOCKER_IMAGE}
 EOF
                             
-                            echo "✅ Docker images push simulation completed"
+                            echo "✅ Docker images pushed successfully"
                             echo "🌐 Repository: https://hub.docker.com/r/${env.DOCKERHUB_REPO}/${env.DOCKER_IMAGE}"
                         """
                     }
@@ -343,7 +326,7 @@ EOF
                                                     usernameVariable: 'DOCKER_USERNAME', 
                                                     passwordVariable: 'DOCKER_PASSWORD')]) {
                         sh """
-                            echo "📦 Helm OCI Push Simulation"
+                            echo "📦 Helm OCI Push - Real Execution"
                             
                             # Use Helm from shared tools
                             export PATH="/shared:\$PATH"
@@ -360,15 +343,9 @@ EOF
                                 /shared/helm push "\$HELM_PACKAGE" oci://registry-1.docker.io/${env.DOCKERHUB_REPO}
                                 echo "✅ Helm chart push successful"
                             else
-                                echo "⚠️  No Helm package found - creating fallback package"
-                                /shared/helm package ${env.HELM_CHART_PATH} \\
-                                    --version ${env.BUILD_NUMBER} \\
-                                    --app-version ${env.IMAGE_TAG} \\
-                                    --destination helm-packages/
-                                HELM_PACKAGE=\$(ls helm-packages/*.tgz | head -1)
-                                echo "🚀 Pushing to oci://registry-1.docker.io/${env.DOCKERHUB_REPO}"
-                                /shared/helm push "\$HELM_PACKAGE" oci://registry-1.docker.io/${env.DOCKERHUB_REPO}
-                                echo "✅ Helm chart push successful"
+                                echo "❌ No Helm package found in helm-packages/"
+                                echo "Helm package must be created in previous stage"
+                                exit 1
                             fi
                             
                             # Create helm push manifest
@@ -379,11 +356,11 @@ Registry: docker.io/${env.DOCKERHUB_REPO}/helm
 Chart: casino-app
 Version: ${env.BUILD_NUMBER}
 App Version: ${env.IMAGE_TAG}
-Status: SIMULATED SUCCESS
+Status: SUCCESS
 Timestamp: \$(date)
 EOF
                             
-                            echo "✅ Helm OCI push simulation completed"
+                            echo "✅ Helm OCI push completed successfully"
                         """
                     }
                 }
@@ -577,11 +554,11 @@ EOF
                 
                 if (env.IS_MAIN_BRANCH == 'true') {
                     echo "🚀 PIPE-02 COMPLETED:"
-                    echo "   ✅ Docker image built (simulated)"
+                    echo "   ✅ Docker image built and tagged"
                     echo "   ✅ Unit tests executed"
                     echo "   ✅ Helm validation completed"
-                    echo "   ✅ Docker image pushed to DockerHub (simulated)"
-                    echo "   ✅ Helm package created and pushed to OCI (simulated)"
+                    echo "   ✅ Docker image pushed to DockerHub"
+                    echo "   ✅ Helm package created and pushed to OCI"
                     echo ""
                     echo "🎯 PIPE-03 COMPLETED:"
                     echo "   ✅ GitOps manifests prepared for dev deployment"
@@ -590,7 +567,7 @@ EOF
                     echo "   🔄 Ready for automated deployment"
                 } else {
                     echo "🔧 PIPE-01 COMPLETED:"
-                    echo "   ✅ Docker build simulated successfully"
+                    echo "   ✅ Docker build completed successfully"
                     echo "   ✅ Unit tests executed"
                     echo "   ✅ Helm validation completed"
                     echo "   ✅ Ready for merge to main"
@@ -653,13 +630,13 @@ EOF
                     echo "   🚀 ArgoCD: Application ready for sync"
                     echo ""
                     echo "Next steps:"
-                    echo "   1. Docker images will be available after real Docker setup"
+                    echo "   1. Docker images are available at DockerHub repository"
                     echo "   2. Apply ArgoCD application: kubectl apply -f gitops-manifests/"
                     echo "   3. Monitor deployment in ArgoCD UI"
                 } else {
                     echo ""
                     echo "🎉 FEATURE BRANCH VALIDATED!"
-                    echo "   ✅ Build: Simulated successfully"
+                    echo "   ✅ Build: Completed successfully"
                     echo "   ✅ Tests: All tests passed"
                     echo "   ✅ Helm: Validation completed"
                     echo "   ✅ Ready: Can be safely merged to main"
